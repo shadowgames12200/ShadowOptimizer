@@ -11,14 +11,16 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [, navigate] = useLocation();
+  const utils = trpc.useUtils();
   const loginMutation = trpc.auth.login.useMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await loginMutation.mutateAsync({ username, password });
+      await utils.auth.me.invalidate(); // Forçar a atualização dos dados do usuário
       toast.success("Login realizado com sucesso!");
-      navigate("/dashboard"); // Redirecionar para o dashboard após o login
+      navigate("/dashboard");
     } catch (error: any) {
       toast.error(error.message || "Erro ao fazer login.");
     }
