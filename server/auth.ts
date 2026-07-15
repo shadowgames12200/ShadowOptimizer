@@ -6,6 +6,7 @@ import { TRPCError } from "@trpc/server";
 import { sdk } from "./_core/sdk";
 import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { ENV } from "./_core/env";
 
 export const authRouter = router({
   login: publicProcedure
@@ -33,7 +34,10 @@ export const authRouter = router({
       }
 
       // Create session token
-      const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || user.username || user.openId });
+      const sessionToken = await sdk.createSessionToken(user.openId, { 
+        name: user.name || user.username || user.openId,
+        appId: ENV.appId || "shadow-optimizer"
+      });
 
       // Set cookie
       const cookieOptions = getSessionCookieOptions(ctx.req);
