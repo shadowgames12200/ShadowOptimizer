@@ -1,131 +1,394 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Key, CheckCircle, AlertCircle, XCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Users, 
+  Key, 
+  CheckCircle, 
+  Ban, 
+  DollarSign, 
+  TrendingUp, 
+  Activity, 
+  Zap,
+  Clock,
+  Circle
+} from "lucide-react";
 import { trpc } from "@/lib/trpc";
-import { useLocation } from "wouter";
 import { Spinner } from "@/components/ui/spinner";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell
+} from 'recharts';
+
+const usageData = [
+  { name: '30/04', keys: 150 },
+  { name: '01/05', keys: 230 },
+  { name: '02/05', keys: 320 },
+  { name: '03/05', keys: 280 },
+  { name: '04/05', keys: 390 },
+  { name: '05/05', keys: 310 },
+  { name: '06/05', keys: 420 },
+];
+
+const planData = [
+  { name: 'Vitalício', value: 62.1, color: '#8b5cf6' },
+  { name: 'Mensal', value: 21.3, color: '#3b82f6' },
+  { name: 'Trimestral', value: 9.7, color: '#ec4899' },
+  { name: 'Semestral', value: 4.4, color: '#10b981' },
+  { name: 'Anual', value: 2.5, color: '#f59e0b' },
+];
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
   const { data: stats, isLoading: statsLoading } = trpc.licenses.getStats.useQuery();
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Spinner />
+      <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
+        <Spinner className="text-primary w-12 h-12" />
       </div>
     );
   }
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
-        {/* Header */}
+      <div className="space-y-6">
+        {/* Top Stats Row */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">ShadowOptimizer Licensing</h1>
-            <p className="text-muted-foreground mt-2">Manage your license keys and track usage</p>
+          <div className="space-y-1">
+            <h1 className="text-2xl font-black tracking-tight text-white uppercase italic">Dashboard</h1>
+            <p className="text-xs text-muted-foreground">Visão geral do sistema Shadow Optimizer</p>
           </div>
-          <Button onClick={() => navigate("/licenses/create")} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Create License
-          </Button>
+          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
+            <Activity className="w-4 h-4 text-primary animate-pulse" />
+            <span className="text-xs font-bold text-primary uppercase tracking-wider">Sistema 100% Online</span>
+          </div>
         </div>
 
-        {/* Statistics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Keys</CardTitle>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <StatCard 
+            title="Total de Usuários" 
+            value="1,250" 
+            change="+12 hoje" 
+            icon={Users} 
+            color="bg-primary"
+          />
+          <StatCard 
+            title="Keys Geradas" 
+            value="2,847" 
+            change="+45 hoje" 
+            icon={Key} 
+            color="bg-purple-500"
+          />
+          <StatCard 
+            title="Keys Ativas" 
+            value="2,256" 
+            change="79.2%" 
+            icon={CheckCircle} 
+            color="bg-green-500"
+          />
+          <StatCard 
+            title="Keys Banidas" 
+            value="134" 
+            change="+3 hoje" 
+            icon={Ban} 
+            color="bg-red-500"
+          />
+          <StatCard 
+            title="Faturamento" 
+            value="R$ 12,540" 
+            change="+18.7%" 
+            icon={DollarSign} 
+            color="bg-blue-500"
+          />
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          {/* Gerar Nova Key */}
+          <Card className="lg:col-span-3 bg-[#0c0c0e] border-white/5 card-glow">
+            <CardHeader>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gerar Nova Key</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{statsLoading ? "-" : stats?.total || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">All generated licenses</p>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Produto</label>
+                <Select defaultValue="lifetime">
+                  <SelectTrigger className="bg-white/5 border-white/5 h-11">
+                    <SelectValue placeholder="Selecione o produto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lifetime">Shadow Optimizer - Vitalício</SelectItem>
+                    <SelectItem value="monthly">Shadow Optimizer - Mensal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Tipo</label>
+                <Select defaultValue="v">
+                  <SelectTrigger className="bg-white/5 border-white/5 h-11">
+                    <SelectValue placeholder="Selecione o tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="v">Vitalício</SelectItem>
+                    <SelectItem value="t">Temporário</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Usuário</label>
+                <Input placeholder="ID do usuário ou deixe em branco" className="bg-white/5 border-white/5 h-11" />
+              </div>
+              <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-11 gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+                <Zap className="w-4 h-4 fill-current" />
+                GERAR KEY
+              </Button>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                Active Keys
-              </CardTitle>
+          {/* Estatísticas de Uso */}
+          <Card className="lg:col-span-6 bg-[#0c0c0e] border-white/5 card-glow">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Estatísticas de Uso</CardTitle>
+              <Select defaultValue="7">
+                <SelectTrigger className="w-24 bg-white/5 border-white/5 h-8 text-[10px]">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-green-600">{statsLoading ? "-" : stats?.active || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Currently active</p>
+              <div className="h-[250px] w-full mt-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={usageData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                    <XAxis 
+                      dataKey="name" 
+                      stroke="#52525b" 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false} 
+                    />
+                    <YAxis 
+                      stroke="#52525b" 
+                      fontSize={10} 
+                      tickLine={false} 
+                      axisLine={false} 
+                    />
+                    <Tooltip 
+                      contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                      itemStyle={{ color: '#8b5cf6', fontWeight: 'bold' }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="keys" 
+                      stroke="#8b5cf6" 
+                      strokeWidth={3} 
+                      dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#09090b' }}
+                      activeDot={{ r: 6, strokeWidth: 0 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-yellow-500" />
-                Expired
-              </CardTitle>
+          {/* Atividade Recente */}
+          <Card className="lg:col-span-3 bg-[#0c0c0e] border-white/5 card-glow">
+            <CardHeader>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Atividade Recente</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-yellow-600">{statsLoading ? "-" : stats?.expired || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Expired licenses</p>
+            <CardContent className="space-y-6">
+              <ActivityItem 
+                icon={Key} 
+                title="Key gerada" 
+                user="!LucasX" 
+                time="Agora" 
+                color="text-green-500" 
+              />
+              <ActivityItem 
+                icon={Key} 
+                title="Key ativada" 
+                user="!vitorfps" 
+                time="1 min atrás" 
+                color="text-blue-500" 
+              />
+              <ActivityItem 
+                icon={Ban} 
+                title="Key banida" 
+                user="!pedrin77" 
+                time="3 min atrás" 
+                color="text-red-500" 
+              />
+              <ActivityItem 
+                icon={TrendingUp} 
+                title="Plano atualizado" 
+                user="!matheuzin" 
+                time="8 min atrás" 
+                color="text-purple-500" 
+              />
+              <Button variant="ghost" className="w-full text-[10px] font-bold uppercase text-muted-foreground hover:text-white">
+                Ver todas atividades →
+              </Button>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-red-500" />
-                Denied
-              </CardTitle>
+          {/* Distribuição de Planos */}
+          <Card className="lg:col-span-4 bg-[#0c0c0e] border-white/5 card-glow">
+            <CardHeader>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Distribuição de Planos</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-red-600">{statsLoading ? "-" : stats?.deniedAttempts || 0}</div>
-              <p className="text-xs text-muted-foreground mt-1">Failed validation attempts</p>
+            <CardContent className="flex items-center">
+              <div className="h-[200px] w-1/2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={planData}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {planData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="w-1/2 space-y-2">
+                {planData.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="text-muted-foreground font-medium">{item.name}</span>
+                    </div>
+                    <span className="text-white font-bold">{item.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Sistemas Mais Utilizados */}
+          <Card className="lg:col-span-4 bg-[#0c0c0e] border-white/5 card-glow">
+            <CardHeader>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Sistemas Mais Utilizados</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <ProgressItem label="FiveM" value={68.7} color="bg-primary" />
+              <ProgressItem label="GTA V" value={15.3} color="bg-primary/60" />
+              <ProgressItem label="RDR 2" value={7.8} color="bg-primary/40" />
+              <ProgressItem label="Valorant" value={4.2} color="bg-primary/20" />
+              <ProgressItem label="Outros" value={4.0} color="bg-primary/10" />
+            </CardContent>
+          </Card>
+
+          {/* Informações do Sistema */}
+          <Card className="lg:col-span-4 bg-[#0c0c0e] border-white/5 card-glow">
+            <CardHeader>
+              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Informações do Sistema</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-muted-foreground font-medium uppercase">Versão do Painel</span>
+                <span className="text-primary font-bold">v2.5.0</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-muted-foreground font-medium uppercase">Versão do Produto</span>
+                <span className="text-primary font-bold">v3.1.7</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-muted-foreground font-medium uppercase">Usuários Online</span>
+                <span className="text-green-500 font-bold">24</span>
+              </div>
+              <div className="flex justify-between items-center text-[10px]">
+                <span className="text-muted-foreground font-medium uppercase">Keys Ativas</span>
+                <span className="text-white font-bold">2,256 / 2,847</span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-[10px]">
+                  <span className="text-muted-foreground font-medium uppercase">Uso do Servidor</span>
+                  <span className="text-white font-bold">42%</span>
+                </div>
+                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-primary h-full w-[42%] shadow-[0_0_10px_rgba(139,92,246,0.5)]" />
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="licenses" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="licenses">License Keys</TabsTrigger>
-            <TabsTrigger value="activity">Recent Activity</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="licenses">
-            <Card>
-              <CardHeader>
-                <CardTitle>Your License Keys</CardTitle>
-                <CardDescription>Manage and monitor all your license keys</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <Key className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Click "Create License" to generate new keys</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="activity">
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Latest validation attempts and events</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8 text-muted-foreground">
-                  <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No activity yet</p>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
       </div>
     </DashboardLayout>
+  );
+}
+
+function StatCard({ title, value, change, icon: Icon, color }: any) {
+  return (
+    <Card className="bg-[#0c0c0e] border-white/5 card-glow overflow-hidden group">
+      <CardContent className="p-4 relative">
+        <div className={`absolute top-0 right-0 w-16 h-16 ${color} opacity-[0.03] rounded-bl-full group-hover:opacity-[0.08] transition-opacity`} />
+        <div className="flex items-center gap-3">
+          <div className={`w-10 h-10 ${color} bg-opacity-10 rounded-xl flex items-center justify-center border border-white/5`}>
+            <Icon className={`w-5 h-5 ${color.replace('bg-', 'text-')}`} />
+          </div>
+          <div className="space-y-1">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{title}</p>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-lg font-black text-white">{value}</h3>
+              <span className="text-[9px] font-bold text-primary">{change}</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ActivityItem({ icon: Icon, title, user, time, color }: any) {
+  return (
+    <div className="flex items-center gap-3">
+      <div className={`w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0`}>
+        <Icon className={`w-4 h-4 ${color}`} />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[11px] font-bold text-white leading-none">{title}</p>
+        <p className="text-[10px] text-muted-foreground mt-1">Usuário: <span className="text-white/70">{user}</span></p>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <span className="text-[9px] text-muted-foreground">{time}</span>
+        <Circle className="w-1.5 h-1.5 fill-green-500 text-green-500" />
+      </div>
+    </div>
+  );
+}
+
+function ProgressItem({ label, value, color }: any) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between text-[10px]">
+        <span className="text-muted-foreground font-medium uppercase">{label}</span>
+        <span className="text-white font-bold">{value}%</span>
+      </div>
+      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+        <div className={`${color} h-full`} style={{ width: `${value}%` }} />
+      </div>
+    </div>
   );
 }
