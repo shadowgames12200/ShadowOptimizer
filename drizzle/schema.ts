@@ -25,4 +25,65 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * License keys table for ShadowOptimizer
+ * Stores all generated license keys with their status and metadata
+ */
+export const licenses = mysqlTable("licenses", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Unique license key in format SHADOW-XXXX-XXXX */
+  key: varchar("key", { length: 64 }).notNull().unique(),
+  /** Status of the license: active, revoked, or expired */
+  status: mysqlEnum("status", ["active", "revoked", "expired"]).default("active").notNull(),
+  /** Optional expiration date for the license */
+  expiresAt: timestamp("expiresAt"),
+  /** HWID bound to this license after first activation */
+  boundHwid: varchar("boundHwid", { length: 256 }),
+  /** Whether the license has been activated at least once */
+  activated: int("activated").default(0).notNull(),
+  /** Owner user ID who created this license */
+  createdByUserId: int("createdByUserId").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type License = typeof licenses.$inferSelect;
+export type InsertLicense = typeof licenses.$inferInsert;
+
+/**
+ * Access logs table
+ * Records all validation attempts (success or failure) for audit trail
+ */
+export const accessLogs = mysqlTable("accessLogs", {
+  id: int("id").autoincrement().primaryKey(),
+  /** License ID being validated */
+  licenseId: int("licenseId").notNull(),
+  /** HWID provided during validation attempt */
+  hwid: varchar("hwid", { length: 256 }).notNull(),
+  /** Result of validation: success, invalid_key, invalid_hwid, revoked, expired */
+  result: mysqlEnum("result", ["success", "invalid_key", "invalid_hwid", "revoked", "expired", "not_activated"]).notNull(),
+  /** IP address or identifier of the validation request */
+  requestSource: varchar("requestSource", { length: 128 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AccessLog = typeof accessLogs.$inferSelect;
+export type InsertAccessLog = typeof accessLogs.$inferInsert;
+
+/**
+ * HWID bindings table (optional, for tracking HWID history)
+ * Stores historical HWID bindings for a license
+ */
+export const hwidBindings = mysqlTable("hwidBindings", {
+  id: int("id").autoincrement().primaryKey(),
+  /** License ID */
+  licenseId: int("licenseId").notNull(),
+  /** HWID value */
+  hwid: varchar("hwid", { length: 256 }).notNull(),
+  /** Whether this is the current binding */
+  isCurrent: int("isCurrent").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HWIDBinding = typeof hwidBindings.$inferSelect;
+export type InsertHWIDBinding = typeof hwidBindings.$inferInsert;

@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, licenses, accessLogs, InsertLicense } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -87,6 +87,150 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Get a license by its key
+ */
+export async function getLicenseByKey(key: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(licenses)
+    .where(eq(licenses.key, key))
+    .limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Get all licenses for a user (admin)
+ */
+export async function getLicensesByUser(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(licenses)
+    .where(eq(licenses.createdByUserId, userId));
+}
+
+/**
+ * Create a new license
+ */
+export async function createLicense(license: InsertLicense) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(licenses).values(license);
+  return getLicenseByKey(license.key);
+}
+
+/**
+ * Update license status
+ */
+export async function updateLicenseStatus(
+  licenseId: number,
+  status: "active" | "revoked" | "expired"
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(licenses)
+    .set({ status, updatedAt: new Date() })
+    .where(eq(licenses.id, licenseId));
+}
+
+/**
+ * Bind HWID to a license
+ */
+export async function bindHwidToLicense(
+  licenseId: number,
+  hwid: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(licenses)
+    .set({ boundHwid: hwid, activated: 1, updatedAt: new Date() })
+    .where(eq(licenses.id, licenseId));
+}
+
+/**
+ * Log an access attempt
+ */
+export async function logAccessAttempt(
+  licenseId: number,
+  hwid: string,
+  result: "success" | "invalid_key" | "invalid_hwid" | "revoked" | "expired" | "not_activated",
+  requestSource?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.insert(accessLogs).values({
+    licenseId,
+    hwid,
+    result,
+    requestSource,
+  });
+}
+
+/**
+ * Get access logs for a license
+ */
+export async function getAccessLogs(licenseId: number, limit = 100) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(accessLogs)
+    .where(eq(accessLogs.licenseId, licenseId))
+    .orderBy(desc(accessLogs.createdAt))
+    .limit(limit);
+}
+
+/**
+ * Get license statistics for dashboard
+ */
+export async function getLicenseStats(userId: number) {
+  const db = await getDb();
+  if (!db) return { total: 0, active: 0, expired: 0, revoked: 0, deniedAttempts: 0 };
+
+  const userLicenses = await db
+    .select()
+    .from(licenses)
+    .where(eq(licenses.createdByUserId, userId));
+
+  const total = userLicenses.length;
+  const active = userLicenses.filter((l) => l.status === "active").length;
+  const expired = userLicenses.filter((l) => l.status === "expired").length;
+  const revoked = userLicenses.filter((l) => l.status === "revoked").length;
+
+  // Count denied attempts
+  const deniedLogs = await db
+    .select()
+    .from(accessLogs)
+    .where(
+      inArray(
+        accessLogs.result,
+        ["invalid_key", "invalid_hwid", "revoked", "expired", "not_activated"]
+      )
+    );
+
+  return {
+    total,
+    active,
+    expired,
+    revoked,
+    deniedAttempts: deniedLogs.length,
+  };
 }
 
 // TODO: add feature queries here as your schema grows.
