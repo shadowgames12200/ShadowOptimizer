@@ -39,9 +39,9 @@ export const authRouter = router({
       ctx.res.cookie(COOKIE_NAME, sessionToken, {
         path: "/",
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true, // Sempre use secure para cookies no Render (HTTPS)
         expires: new Date(Date.now() + ONE_YEAR_MS),
-        sameSite: "lax",
+        sameSite: "none", // Necessário para cookies entre domínios/subdomínios
       });
 
       return { success: true };
