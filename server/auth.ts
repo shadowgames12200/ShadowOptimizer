@@ -36,12 +36,10 @@ export const authRouter = router({
       const sessionToken = await sdk.createSessionToken(user.openId, { name: user.name || user.username || user.openId });
 
       // Set cookie
+      const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.cookie(COOKIE_NAME, sessionToken, {
-        path: "/",
-        httpOnly: true,
-        secure: true, // Sempre use secure para cookies no Render (HTTPS)
+        ...cookieOptions,
         expires: new Date(Date.now() + ONE_YEAR_MS),
-        sameSite: "none", // Necessário para cookies entre domínios/subdomínios
       });
 
       return { success: true };

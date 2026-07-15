@@ -272,6 +272,7 @@ class SDKServer {
     const session = await this.verifySession(sessionToken);
 
     if (!session) {
+      console.warn("[Auth] No valid session found in request");
       throw ForbiddenError("Invalid session cookie");
     }
 
