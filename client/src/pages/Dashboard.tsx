@@ -50,10 +50,12 @@ const planData = [
 ];
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const { data: stats, isLoading: statsLoading } = trpc.licenses.getStats.useQuery();
+  const { user, loading } = useAuth();
+  const { data: stats, isLoading: statsLoading } = trpc.licenses.getStats.useQuery(undefined, {
+    enabled: !!user
+  });
 
-  if (!user) {
+  if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
         <Spinner className="text-primary w-12 h-12" />
