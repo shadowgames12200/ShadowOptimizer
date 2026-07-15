@@ -55,10 +55,19 @@ export default function Dashboard() {
     enabled: !!user
   });
 
-  if (loading || !user) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
         <Spinner className="text-primary w-12 h-12" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#09090b] text-white gap-4">
+        <p>Você não está autenticado.</p>
+        <Button onClick={() => window.location.href = "/login"}>Ir para Login</Button>
       </div>
     );
   }
