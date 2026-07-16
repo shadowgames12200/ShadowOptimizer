@@ -8,6 +8,7 @@ import { LoginPage } from "./pages/LoginPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
+import Support from "./pages/Support";
 import LicensesPage from "./pages/LicensesPage";
 import LicenseDetail from "./pages/LicenseDetail";
 
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/licenses" component={LicensesPage} />
       <Route path="/licenses/:licenseId" component={(props: any) => <LicenseDetail licenseId={props.params.licenseId} />} />
+      <Route path="/support" component={Support} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

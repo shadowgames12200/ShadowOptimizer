@@ -81,10 +81,10 @@ export default function Dashboard() {
             <h1 className="text-2xl font-black tracking-tight text-white uppercase italic">Dashboard</h1>
             <p className="text-xs text-muted-foreground">Visão geral do sistema Shadow Optimizer</p>
           </div>
-          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
-            <Activity className="w-4 h-4 text-primary animate-pulse" />
-            <span className="text-xs font-bold text-primary uppercase tracking-wider">Sistema 100% Online</span>
-          </div>
+	          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
+	            <Activity className="w-4 h-4 text-primary animate-pulse" />
+	            <span className="text-xs font-bold text-primary uppercase tracking-wider">Sistema 100% Online</span>
+	          </div>
         </div>
 
         {/* Stats Grid */}

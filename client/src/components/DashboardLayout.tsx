@@ -113,7 +113,7 @@ export default function DashboardLayout({
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
               <div className="h-4 w-[1px] bg-white/10" />
               <span className="text-sm font-medium text-muted-foreground">
-                Bem-vindo, <span className="text-primary font-bold">Administrador</span>
+                Bem-vindo, <span className="text-primary font-bold">Charles</span>
               </span>
             </div>
             
@@ -236,7 +236,7 @@ function AppSidebar() {
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white truncate leading-none">
-                {user?.name || "Administrador"}
+                Charles
               </p>
               <p className="text-[10px] text-primary font-bold uppercase mt-1">
                 Nível: MASTER
