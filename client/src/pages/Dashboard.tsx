@@ -51,12 +51,12 @@ function GenerateKeyForm() {
   });
 
   const handleGenerateKey = () => {
-    const days = parseInt(licenseType, 10);
+    const days = parseFloat(licenseType);
     const qty = parseInt(quantity, 10);
     createMutation.mutate({
       prefix: "SHADOW",
       quantity: qty > 0 ? qty : 1,
-      expiresInDays: days > 0 ? days : undefined,
+      expiresInDays: days > 0 ? days : 0,
     });
   };
 

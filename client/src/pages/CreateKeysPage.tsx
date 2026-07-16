@@ -32,7 +32,7 @@ function CreateKeysContent() {
 
   const handleGenerate = () => {
     const qty = parseInt(quantity, 10);
-    const days = parseInt(expiresInDays, 10);
+    const days = parseFloat(expiresInDays);
     if (isNaN(qty) || qty < 1 || qty > 100) {
       toast.error("Quantidade deve ser entre 1 e 100.");
       return;
@@ -40,7 +40,7 @@ function CreateKeysContent() {
     createMutation.mutate({
       prefix: prefix || "SHADOW",
       quantity: qty,
-      expiresInDays: days > 0 ? days : undefined,
+      expiresInDays: days > 0 ? days : 0,
     });
   };
 
