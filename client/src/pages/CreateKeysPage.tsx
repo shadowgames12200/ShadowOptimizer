@@ -92,6 +92,23 @@ function CreateKeysContent() {
             </div>
 
             <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Produto</label>
+              <Select defaultValue="lifetime">
+                <SelectTrigger className="bg-white/5 border-white/5 h-11">
+                  <SelectValue placeholder="Selecione o produto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="test">Shadow Optimizer - Teste (1 hora)</SelectItem>
+                  <SelectItem value="lifetime">Shadow Optimizer - Vitalício</SelectItem>
+                  <SelectItem value="monthly">Shadow Optimizer - Mensal (30 dias)</SelectItem>
+                  <SelectItem value="quarterly">Shadow Optimizer - Trimestral (90 dias)</SelectItem>
+                  <SelectItem value="semiannual">Shadow Optimizer - Semestral (180 dias)</SelectItem>
+                  <SelectItem value="annual">Shadow Optimizer - Anual (365 dias)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Tipo de Licença</label>
               <Select
                 value={expiresInDays}

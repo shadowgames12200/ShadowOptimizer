@@ -70,8 +70,12 @@ function GenerateKeyForm() {
               <SelectValue placeholder="Selecione o produto" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="test">Shadow Optimizer - Teste (1 hora)</SelectItem>
               <SelectItem value="lifetime">Shadow Optimizer - Vitalício</SelectItem>
-              <SelectItem value="monthly">Shadow Optimizer - Mensal</SelectItem>
+              <SelectItem value="monthly">Shadow Optimizer - Mensal (30 dias)</SelectItem>
+              <SelectItem value="quarterly">Shadow Optimizer - Trimestral (90 dias)</SelectItem>
+              <SelectItem value="semiannual">Shadow Optimizer - Semestral (180 dias)</SelectItem>
+              <SelectItem value="annual">Shadow Optimizer - Anual (365 dias)</SelectItem>
             </SelectContent>
           </Select>
         </div>
