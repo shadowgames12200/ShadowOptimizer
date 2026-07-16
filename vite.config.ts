@@ -168,14 +168,7 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
     // Otimizações de build
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        drop_console: process.env.NODE_ENV === "production",
-        drop_debugger: process.env.NODE_ENV === "production",
-      },
-      mangle: true,
-    },
+    minify: "esbuild",
     rollupOptions: {
       output: {
         manualChunks: {
