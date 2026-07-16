@@ -34,15 +34,19 @@ const PageLoader = () => (
 
 function Router() {
   const { data: user, isLoading } = trpc.auth.me.useQuery();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !user && window.location.pathname !== "/login") {
+    if (!isLoading && !user && location !== "/login") {
       navigate("/login");
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, location, navigate]);
 
   if (isLoading) {
+    return <PageLoader />;
+  }
+
+  if (!user && location !== "/login") {
     return <PageLoader />;
   }
 
@@ -53,7 +57,7 @@ function Router() {
         <Route component={() => {
           useEffect(() => {
             navigate("/login");
-          }, []);
+          }, [navigate]);
           return <PageLoader />;
         }} />
       ) : (

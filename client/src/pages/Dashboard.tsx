@@ -33,13 +33,15 @@ import { toast } from "sonner";
 // Componente para o Formulário de Geração de Key (Isolado para evitar conflito com gráficos)
 function GenerateKeyForm() {
   const [licenseType, setLicenseType] = useState("0");
+  const [quantity, setQuantity] = useState("1");
   const [userId, setUserId] = useState("");
   const utils = trpc.useUtils();
 
   const createMutation = trpc.licenses.create.useMutation({
     onSuccess: (data) => {
-      toast.success(`Key gerada com sucesso: ${data.keys[0]}`);
+      toast.success(`${data.keys.length} Key(s) gerada(s) com sucesso!`);
       setUserId("");
+      setQuantity("1");
       utils.licenses.list.invalidate();
       utils.licenses.getStats.invalidate();
     },
@@ -50,9 +52,10 @@ function GenerateKeyForm() {
 
   const handleGenerateKey = () => {
     const days = parseInt(licenseType, 10);
+    const qty = parseInt(quantity, 10);
     createMutation.mutate({
       prefix: "SHADOW",
-      quantity: 1,
+      quantity: qty > 0 ? qty : 1,
       expiresInDays: days > 0 ? days : undefined,
     });
   };
@@ -94,6 +97,18 @@ function GenerateKeyForm() {
                     <SelectItem value="365">Anual (365 dias)</SelectItem>
                   </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Quantidade</label>
+          <Input
+            type="number"
+            min="1"
+            max="100"
+            placeholder="Quantidade de chaves"
+            className="bg-white/5 border-white/5 h-11"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Usuário</label>
