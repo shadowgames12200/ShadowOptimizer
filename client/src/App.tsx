@@ -70,6 +70,12 @@ function Router() {
           <UsersPage />
         </Suspense>
       </Route>
+      {/* Gerenciamento */}
+      <Route path="/licenses/create">
+        <Suspense fallback={<PageLoader />}>
+          <CreateKeysPage />
+        </Suspense>
+      </Route>
       <Route path="/licenses/:licenseId">
         {(props: any) => (
           <Suspense fallback={<PageLoader />}>
@@ -105,12 +111,6 @@ function Router() {
       <Route path="/settings">
         <Suspense fallback={<PageLoader />}>
           <SettingsPage />
-        </Suspense>
-      </Route>
-      {/* Gerenciamento */}
-      <Route path="/licenses/create">
-        <Suspense fallback={<PageLoader />}>
-          <CreateKeysPage />
         </Suspense>
       </Route>
       <Route path="/import">
