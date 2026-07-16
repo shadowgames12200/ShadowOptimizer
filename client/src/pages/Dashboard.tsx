@@ -13,7 +13,6 @@ import {
   TrendingUp, 
   Activity, 
   Zap,
-  Clock,
   Circle
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
@@ -30,23 +29,21 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { useState } from "react";
+import { toast } from "sonner";
 
-const usageData = [
-  { name: '30/04', keys: 150 },
-  { name: '01/05', keys: 230 },
-  { name: '02/05', keys: 320 },
-  { name: '03/05', keys: 280 },
-  { name: '04/05', keys: 390 },
-  { name: '05/05', keys: 310 },
-  { name: '06/05', keys: 420 },
+const emptyUsageData = [
+  { name: 'Dia 1', keys: 0 },
+  { name: 'Dia 2', keys: 0 },
+  { name: 'Dia 3', keys: 0 },
+  { name: 'Dia 4', keys: 0 },
+  { name: 'Dia 5', keys: 0 },
+  { name: 'Dia 6', keys: 0 },
+  { name: 'Dia 7', keys: 0 },
 ];
 
 const planData = [
-  { name: 'Vitalício', value: 62.1, color: '#8b5cf6' },
-  { name: 'Mensal', value: 21.3, color: '#3b82f6' },
-  { name: 'Trimestral', value: 9.7, color: '#ec4899' },
-  { name: 'Semestral', value: 4.4, color: '#10b981' },
-  { name: 'Anual', value: 2.5, color: '#f59e0b' },
+  { name: 'Vitalício', value: 100, color: '#8b5cf6' },
 ];
 
 export default function Dashboard() {
@@ -54,6 +51,31 @@ export default function Dashboard() {
   const { data: stats, isLoading: statsLoading } = trpc.licenses.getStats.useQuery(undefined, {
     enabled: !!user
   });
+
+  const [licenseType, setLicenseType] = useState("0");
+  const [userId, setUserId] = useState("");
+  const utils = trpc.useUtils();
+
+  const createMutation = trpc.licenses.create.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Key gerada com sucesso: ${data.keys[0]}`);
+      setUserId("");
+      utils.licenses.list.invalidate();
+      utils.licenses.getStats.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao gerar key");
+    },
+  });
+
+  const handleGenerateKey = () => {
+    const days = parseInt(licenseType, 10);
+    createMutation.mutate({
+      prefix: "SHADOW",
+      quantity: 1,
+      expiresInDays: days > 0 ? days : undefined,
+    });
+  };
 
   if (loading) {
     return (
@@ -72,6 +94,11 @@ export default function Dashboard() {
     );
   }
 
+  const totalKeys = stats?.total ?? 0;
+  const activeKeys = stats?.active ?? 0;
+  const revokedKeys = stats?.revoked ?? 0;
+  const activePercent = totalKeys > 0 ? ((activeKeys / totalKeys) * 100).toFixed(1) : "0";
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -81,46 +108,46 @@ export default function Dashboard() {
             <h1 className="text-2xl font-black tracking-tight text-white uppercase italic">Dashboard</h1>
             <p className="text-xs text-muted-foreground">Visão geral do sistema Shadow Optimizer</p>
           </div>
-	          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
-	            <Activity className="w-4 h-4 text-primary animate-pulse" />
-	            <span className="text-xs font-bold text-primary uppercase tracking-wider">Sistema 100% Online</span>
-	          </div>
+          <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
+            <Activity className="w-4 h-4 text-primary animate-pulse" />
+            <span className="text-xs font-bold text-primary uppercase tracking-wider">Sistema 100% Online</span>
+          </div>
         </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
           <StatCard 
             title="Total de Usuários" 
-            value="1,250" 
-            change="+12 hoje" 
+            value="0" 
+            change="0 hoje" 
             icon={Users} 
             color="bg-primary"
           />
           <StatCard 
             title="Keys Geradas" 
-            value="2,847" 
-            change="+45 hoje" 
+            value={statsLoading ? "..." : String(totalKeys)}
+            change="0 hoje" 
             icon={Key} 
             color="bg-purple-500"
           />
           <StatCard 
             title="Keys Ativas" 
-            value="2,256" 
-            change="79.2%" 
+            value={statsLoading ? "..." : String(activeKeys)}
+            change={`${activePercent}%`}
             icon={CheckCircle} 
             color="bg-green-500"
           />
           <StatCard 
             title="Keys Banidas" 
-            value="134" 
-            change="+3 hoje" 
+            value={statsLoading ? "..." : String(revokedKeys)}
+            change="0 hoje" 
             icon={Ban} 
             color="bg-red-500"
           />
           <StatCard 
             title="Faturamento" 
-            value="R$ 12,540" 
-            change="+18.7%" 
+            value="R$ 0" 
+            change="0%" 
             icon={DollarSign} 
             color="bg-blue-500"
           />
@@ -149,23 +176,35 @@ export default function Dashboard() {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Tipo</label>
-                <Select defaultValue="v">
+                <Select value={licenseType} onValueChange={setLicenseType}>
                   <SelectTrigger className="bg-white/5 border-white/5 h-11">
                     <SelectValue placeholder="Selecione o tipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="v">Vitalício</SelectItem>
-                    <SelectItem value="t">Temporário</SelectItem>
+                    <SelectItem value="0">Vitalício</SelectItem>
+                    <SelectItem value="30">Mensal (30 dias)</SelectItem>
+                    <SelectItem value="90">Trimestral (90 dias)</SelectItem>
+                    <SelectItem value="180">Semestral (180 dias)</SelectItem>
+                    <SelectItem value="365">Anual (365 dias)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Usuário</label>
-                <Input placeholder="ID do usuário ou deixe em branco" className="bg-white/5 border-white/5 h-11" />
+                <Input
+                  placeholder="ID do usuário ou deixe em branco"
+                  className="bg-white/5 border-white/5 h-11"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                />
               </div>
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-11 gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]">
+              <Button
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-11 gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+                onClick={handleGenerateKey}
+                disabled={createMutation.isPending}
+              >
                 <Zap className="w-4 h-4 fill-current" />
-                GERAR KEY
+                {createMutation.isPending ? "GERANDO..." : "GERAR KEY"}
               </Button>
             </CardContent>
           </Card>
@@ -187,7 +226,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="h-[250px] w-full mt-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={usageData}>
+                  <LineChart data={emptyUsageData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                     <XAxis 
                       dataKey="name" 
@@ -226,37 +265,13 @@ export default function Dashboard() {
               <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Atividade Recente</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <ActivityItem 
-                icon={Key} 
-                title="Key gerada" 
-                user="!LucasX" 
-                time="Agora" 
-                color="text-green-500" 
-              />
-              <ActivityItem 
-                icon={Key} 
-                title="Key ativada" 
-                user="!vitorfps" 
-                time="1 min atrás" 
-                color="text-blue-500" 
-              />
-              <ActivityItem 
-                icon={Ban} 
-                title="Key banida" 
-                user="!pedrin77" 
-                time="3 min atrás" 
-                color="text-red-500" 
-              />
-              <ActivityItem 
-                icon={TrendingUp} 
-                title="Plano atualizado" 
-                user="!matheuzin" 
-                time="8 min atrás" 
-                color="text-purple-500" 
-              />
-              <Button variant="ghost" className="w-full text-[10px] font-bold uppercase text-muted-foreground hover:text-white">
-                Ver todas atividades →
-              </Button>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 mb-3">
+                  <Activity className="w-5 h-5 text-primary" />
+                </div>
+                <p className="text-xs text-muted-foreground">Nenhuma atividade recente.</p>
+                <p className="text-[10px] text-muted-foreground/60 mt-1">As atividades aparecerão aqui.</p>
+              </div>
             </CardContent>
           </Card>
 
@@ -284,15 +299,27 @@ export default function Dashboard() {
                 </ResponsiveContainer>
               </div>
               <div className="w-1/2 space-y-2">
-                {planData.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between text-[10px]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-muted-foreground font-medium">{item.name}</span>
-                    </div>
-                    <span className="text-white font-bold">{item.value}%</span>
+                <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                    <span className="text-muted-foreground font-medium">Vitalício</span>
                   </div>
-                ))}
+                  <span className="text-white font-bold">0%</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span className="text-muted-foreground font-medium">Mensal</span>
+                  </div>
+                  <span className="text-white font-bold">0%</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-pink-500" />
+                    <span className="text-muted-foreground font-medium">Trimestral</span>
+                  </div>
+                  <span className="text-white font-bold">0%</span>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -303,11 +330,11 @@ export default function Dashboard() {
               <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Sistemas Mais Utilizados</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <ProgressItem label="FiveM" value={68.7} color="bg-primary" />
-              <ProgressItem label="GTA V" value={15.3} color="bg-primary/60" />
-              <ProgressItem label="RDR 2" value={7.8} color="bg-primary/40" />
-              <ProgressItem label="Valorant" value={4.2} color="bg-primary/20" />
-              <ProgressItem label="Outros" value={4.0} color="bg-primary/10" />
+              <ProgressItem label="FiveM" value={0} color="bg-primary" />
+              <ProgressItem label="GTA V" value={0} color="bg-primary/60" />
+              <ProgressItem label="RDR 2" value={0} color="bg-primary/40" />
+              <ProgressItem label="Valorant" value={0} color="bg-primary/20" />
+              <ProgressItem label="Outros" value={0} color="bg-primary/10" />
             </CardContent>
           </Card>
 
@@ -327,19 +354,19 @@ export default function Dashboard() {
               </div>
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-muted-foreground font-medium uppercase">Usuários Online</span>
-                <span className="text-green-500 font-bold">24</span>
+                <span className="text-green-500 font-bold">0</span>
               </div>
               <div className="flex justify-between items-center text-[10px]">
                 <span className="text-muted-foreground font-medium uppercase">Keys Ativas</span>
-                <span className="text-white font-bold">2,256 / 2,847</span>
+                <span className="text-white font-bold">{statsLoading ? "..." : `${activeKeys} / ${totalKeys}`}</span>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between text-[10px]">
                   <span className="text-muted-foreground font-medium uppercase">Uso do Servidor</span>
-                  <span className="text-white font-bold">42%</span>
+                  <span className="text-white font-bold">0%</span>
                 </div>
                 <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full w-[42%] shadow-[0_0_10px_rgba(139,92,246,0.5)]" />
+                  <div className="bg-primary h-full w-0 shadow-[0_0_10px_rgba(139,92,246,0.5)]" />
                 </div>
               </div>
             </CardContent>

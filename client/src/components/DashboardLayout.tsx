@@ -70,7 +70,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading, user } = useAuth();
+  const { loading, user, logout } = useAuth();
 
   if (loading) {
     return <DashboardLayoutSkeleton />
@@ -113,7 +113,7 @@ export default function DashboardLayout({
               <SidebarTrigger className="text-muted-foreground hover:text-white" />
               <div className="h-4 w-[1px] bg-white/10" />
               <span className="text-sm font-medium text-muted-foreground">
-                Bem-vindo, <span className="text-primary font-bold">Charles</span>
+                Bem-vindo, <span className="text-primary font-bold">{user?.name || 'Charles'}</span>
               </span>
             </div>
             
@@ -130,7 +130,7 @@ export default function DashboardLayout({
                   <Bell className="w-5 h-5" />
                   <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-[#09090b]" />
                 </button>
-                <Button variant="outline" className="border-white/10 hover:bg-white/5 text-xs h-9 gap-2">
+                <Button variant="outline" className="border-white/10 hover:bg-white/5 text-xs h-9 gap-2" onClick={() => logout()}>
                   <LogOut className="w-3 h-3" />
                   Sair
                 </Button>
@@ -236,10 +236,10 @@ function AppSidebar() {
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white truncate leading-none">
-                Charles
+                {user?.name || 'Charles'}
               </p>
               <p className="text-[10px] text-primary font-bold uppercase mt-1">
-                Nível: MASTER
+                Nível: MESTRE
               </p>
             </div>
           )}
