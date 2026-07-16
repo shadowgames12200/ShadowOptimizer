@@ -49,8 +49,17 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={LoginPage} />
-      <Route path="/" component={Dashboard} />
-      <Route path="/dashboard" component={Dashboard} />
+      {!user ? (
+        <Route component={() => {
+          useEffect(() => {
+            navigate("/login");
+          }, []);
+          return <PageLoader />;
+        }} />
+      ) : (
+        <>
+          <Route path="/" component={Dashboard} />
+          <Route path="/dashboard" component={Dashboard} />
       {/* Menu Principal */}
       <Route path="/users">
         <Suspense fallback={<PageLoader />}>
@@ -120,9 +129,11 @@ function Router() {
           <BansPage />
         </Suspense>
       </Route>
-      {/* Fallback */}
-      <Route path="/404" component={NotFound} />
-      <Route component={NotFound} />
+          {/* Fallback */}
+          <Route path="/404" component={NotFound} />
+          <Route component={NotFound} />
+        </>
+      )}
     </Switch>
   );
 }
