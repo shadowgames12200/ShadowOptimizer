@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Copy, Trash2, Eye } from "lucide-react";
+import { Plus, Copy, Trash2, Eye, AlertCircle } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ export default function LicensesPage() {
   const { user } = useAuth();
   const { data: licenses, isLoading } = trpc.licenses.list.useQuery();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [prefix, setPrefix] = useState("SHADOW");
   const [quantity, setQuantity] = useState(1);
   const utils = trpc.useUtils();
@@ -29,6 +30,17 @@ export default function LicensesPage() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to create licenses");
+    },
+  });
+
+  const deleteMutation = trpc.licenses.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Chave deletada com sucesso");
+      setShowDeleteConfirm(null);
+      utils.licenses.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao deletar chave");
     },
   });
 
@@ -49,7 +61,11 @@ export default function LicensesPage() {
 
   const handleCopyKey = (key: string) => {
     navigator.clipboard.writeText(key);
-    toast.success("License key copied to clipboard");
+    toast.success("Chave copiada!");
+  };
+
+  const handleDeleteKey = (licenseId: number) => {
+    deleteMutation.mutate({ licenseId });
   };
 
   const getStatusColor = (status: string) => {
@@ -70,35 +86,35 @@ export default function LicensesPage() {
       <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">License Keys</h1>
-            <p className="text-muted-foreground mt-2">Create, manage, and monitor your license keys</p>
+            <h1 className="text-3xl font-bold tracking-tight">Chaves de Licença</h1>
+            <p className="text-muted-foreground mt-2">Crie, gerencie e monitore suas chaves de licença</p>
           </div>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
-                Generate Keys
+                Gerar Chaves
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Generate New License Keys</DialogTitle>
-                <DialogDescription>Create one or more license keys with a custom prefix</DialogDescription>
+                <DialogTitle>Gerar Novas Chaves de Licença</DialogTitle>
+                <DialogDescription>Crie uma ou mais chaves de licença com um prefixo personalizado</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="prefix">Key Prefix</Label>
+                  <Label htmlFor="prefix">Prefixo da Chave</Label>
                   <Input
                     id="prefix"
                     value={prefix}
                     onChange={(e) => setPrefix(e.target.value)}
-                    placeholder="e.g., SHADOW"
+                    placeholder="ex: SHADOW"
                     className="mt-1"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">Format: PREFIX-XXXX-XXXX</p>
+                  <p className="text-xs text-muted-foreground mt-1">Formato: PREFIXO-XXXX-XXXX</p>
                 </div>
                 <div>
-                  <Label htmlFor="quantity">Quantity</Label>
+                  <Label htmlFor="quantity">Quantidade</Label>
                   <Input
                     id="quantity"
                     type="number"
@@ -114,7 +130,7 @@ export default function LicensesPage() {
                   className="w-full"
                   disabled={createMutation.isPending}
                 >
-                  {createMutation.isPending ? "Creating..." : `Generate ${quantity} Key${quantity !== 1 ? "s" : ""}`}
+                  {createMutation.isPending ? "Criando..." : `Gerar ${quantity} Chave${quantity !== 1 ? "s" : ""}`}
                 </Button>
               </div>
             </DialogContent>
@@ -123,8 +139,8 @@ export default function LicensesPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>All License Keys</CardTitle>
-            <CardDescription>Total: {licenses?.length || 0} keys</CardDescription>
+            <CardTitle>Todas as Chaves de Licença</CardTitle>
+            <CardDescription>Total: {licenses?.length || 0} chaves</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -136,12 +152,12 @@ export default function LicensesPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>License Key</TableHead>
+                      <TableHead>Chave de Licença</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>HWID</TableHead>
-                      <TableHead>Expires</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>Expira em</TableHead>
+                      <TableHead>Criada em</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -150,23 +166,25 @@ export default function LicensesPage() {
                         <TableCell className="font-mono text-sm">{license.key}</TableCell>
                         <TableCell>
                           <Badge className={getStatusColor(license.status)}>
-                            {license.status}
+                            {license.status === "active" && "Ativa"}
+                            {license.status === "expired" && "Expirada"}
+                            {license.status === "revoked" && "Revogada"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {license.boundHwid ? (
                             <span className="font-mono">{license.boundHwid.substring(0, 16)}...</span>
                           ) : (
-                            <span className="italic">Not bound</span>
+                            <span className="italic">Não vinculada</span>
                           )}
                         </TableCell>
                         <TableCell className="text-sm">
                           {license.expiresAt
-                            ? new Date(license.expiresAt).toLocaleDateString()
-                            : "Never"}
+                            ? new Date(license.expiresAt).toLocaleDateString("pt-BR")
+                            : "Nunca"}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {new Date(license.createdAt).toLocaleDateString()}
+                          {new Date(license.createdAt).toLocaleDateString("pt-BR")}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
@@ -174,15 +192,47 @@ export default function LicensesPage() {
                               variant="ghost"
                               size="sm"
                               onClick={() => handleCopyKey(license.key)}
+                              title="Copiar chave"
                             >
                               <Copy className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm">
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              title="Ver detalhes"
+                              onClick={() => window.location.href = `/licenses/${license.id}`}
+                            >
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button variant="ghost" size="sm" className="text-red-600">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {showDeleteConfirm === license.id ? (
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteKey(license.id)}
+                                  disabled={deleteMutation.isPending}
+                                >
+                                  Confirmar
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setShowDeleteConfirm(null)}
+                                >
+                                  Cancelar
+                                </Button>
+                              </div>
+                            ) : (
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => setShowDeleteConfirm(license.id)}
+                                title="Deletar chave"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </TableCell>
                       </TableRow>
@@ -192,7 +242,7 @@ export default function LicensesPage() {
               </div>
             ) : (
               <div className="text-center py-8 text-muted-foreground">
-                <p>No license keys yet. Click "Generate Keys" to create your first one.</p>
+                <p>Nenhuma chave de licença ainda. Clique em "Gerar Chaves" para criar a primeira.</p>
               </div>
             )}
           </CardContent>

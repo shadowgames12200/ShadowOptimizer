@@ -81,13 +81,14 @@ function GenerateKeyForm() {
             <SelectTrigger className="bg-white/5 border-white/5 h-11">
               <SelectValue placeholder="Selecione o tipo" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="0">Vitalício</SelectItem>
-              <SelectItem value="30">Mensal (30 dias)</SelectItem>
-              <SelectItem value="90">Trimestral (90 dias)</SelectItem>
-              <SelectItem value="180">Semestral (180 dias)</SelectItem>
-              <SelectItem value="365">Anual (365 dias)</SelectItem>
-            </SelectContent>
+                  <SelectContent>
+                    <SelectItem value="0.0416">Teste (1 hora)</SelectItem>
+                    <SelectItem value="0">Vitalício</SelectItem>
+                    <SelectItem value="30">Mensal (30 dias)</SelectItem>
+                    <SelectItem value="90">Trimestral (90 dias)</SelectItem>
+                    <SelectItem value="180">Semestral (180 dias)</SelectItem>
+                    <SelectItem value="365">Anual (365 dias)</SelectItem>
+                  </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">

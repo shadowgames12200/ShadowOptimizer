@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PlusCircle, Copy, CheckCheck } from "lucide-react";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
@@ -101,6 +101,7 @@ function CreateKeysContent() {
                   <SelectValue placeholder="Selecione o tipo" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="0.0416">Teste (1 hora)</SelectItem>
                   <SelectItem value="0">Vitalício</SelectItem>
                   <SelectItem value="30">Mensal (30 dias)</SelectItem>
                   <SelectItem value="90">Trimestral (90 dias)</SelectItem>
