@@ -295,10 +295,17 @@ export async function deleteAllLicensesByUser(userId: number) {
   
   const licenseIds = userLicenses.map(l => l.id);
 
+  // 1. Delete all logs related to this user's licenses
   if (licenseIds.length > 0) {
-    // Delete logs first due to foreign key constraints
     await db.delete(accessLogs).where(inArray(accessLogs.licenseId, licenseIds));
-    // Delete licenses
+  }
+
+  // 2. Delete logs that are NOT linked to any license (invalid key attempts)
+  // These logs have licenseId = 0
+  await db.delete(accessLogs).where(eq(accessLogs.licenseId, 0));
+
+  // 3. Delete the licenses themselves
+  if (licenseIds.length > 0) {
     await db.delete(licenses).where(inArray(licenses.id, licenseIds));
   }
 }
