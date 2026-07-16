@@ -2,25 +2,35 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { trpc } from "./lib/trpc";
 import { LoginPage } from "./pages/LoginPage";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
-import Support from "./pages/Support";
-import LicensesPage from "./pages/LicensesPage";
-import LicenseDetail from "./pages/LicenseDetail";
-import UsersPage from "./pages/UsersPage";
-import ProductsPage from "./pages/ProductsPage";
-import LogsPage from "./pages/LogsPage";
-import SystemPage from "./pages/SystemPage";
-import SettingsPage from "./pages/SettingsPage";
-import CreateKeysPage from "./pages/CreateKeysPage";
-import ImportPage from "./pages/ImportPage";
-import PlansPage from "./pages/PlansPage";
-import ResellerPage from "./pages/ResellerPage";
-import BansPage from "./pages/BansPage";
+import { Spinner } from "@/components/ui/spinner";
+
+// Lazy load de páginas não-críticas
+const Support = lazy(() => import("./pages/Support"));
+const LicensesPage = lazy(() => import("./pages/LicensesPage"));
+const LicenseDetail = lazy(() => import("./pages/LicenseDetail"));
+const UsersPage = lazy(() => import("./pages/UsersPage"));
+const ProductsPage = lazy(() => import("./pages/ProductsPage"));
+const LogsPage = lazy(() => import("./pages/LogsPage"));
+const SystemPage = lazy(() => import("./pages/SystemPage"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const CreateKeysPage = lazy(() => import("./pages/CreateKeysPage"));
+const ImportPage = lazy(() => import("./pages/ImportPage"));
+const PlansPage = lazy(() => import("./pages/PlansPage"));
+const ResellerPage = lazy(() => import("./pages/ResellerPage"));
+const BansPage = lazy(() => import("./pages/BansPage"));
+
+// Componente de loading otimizado
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
+    <Spinner className="text-primary w-8 h-8" />
+  </div>
+);
 
 function Router() {
   const { data: user, isLoading } = trpc.auth.me.useQuery();
@@ -33,7 +43,7 @@ function Router() {
   }, [user, isLoading, navigate]);
 
   if (isLoading) {
-    return <div>Carregando...</div>;
+    return <PageLoader />;
   }
 
   return (
@@ -42,20 +52,74 @@ function Router() {
       <Route path="/" component={Dashboard} />
       <Route path="/dashboard" component={Dashboard} />
       {/* Menu Principal */}
-      <Route path="/users" component={UsersPage} />
-      <Route path="/licenses" component={LicensesPage} />
-      <Route path="/licenses/:licenseId" component={(props: any) => <LicenseDetail licenseId={props.params.licenseId} />} />
-      <Route path="/products" component={ProductsPage} />
-      <Route path="/logs" component={LogsPage} />
-      <Route path="/system" component={SystemPage} />
-      <Route path="/support" component={Support} />
-      <Route path="/settings" component={SettingsPage} />
+      <Route path="/users">
+        <Suspense fallback={<PageLoader />}>
+          <UsersPage />
+        </Suspense>
+      </Route>
+      <Route path="/licenses/:licenseId">
+        {(props: any) => (
+          <Suspense fallback={<PageLoader />}>
+            <LicenseDetail licenseId={props.params.licenseId} />
+          </Suspense>
+        )}
+      </Route>
+      <Route path="/licenses">
+        <Suspense fallback={<PageLoader />}>
+          <LicensesPage />
+        </Suspense>
+      </Route>
+      <Route path="/products">
+        <Suspense fallback={<PageLoader />}>
+          <ProductsPage />
+        </Suspense>
+      </Route>
+      <Route path="/logs">
+        <Suspense fallback={<PageLoader />}>
+          <LogsPage />
+        </Suspense>
+      </Route>
+      <Route path="/system">
+        <Suspense fallback={<PageLoader />}>
+          <SystemPage />
+        </Suspense>
+      </Route>
+      <Route path="/support">
+        <Suspense fallback={<PageLoader />}>
+          <Support />
+        </Suspense>
+      </Route>
+      <Route path="/settings">
+        <Suspense fallback={<PageLoader />}>
+          <SettingsPage />
+        </Suspense>
+      </Route>
       {/* Gerenciamento */}
-      <Route path="/licenses/create" component={CreateKeysPage} />
-      <Route path="/import" component={ImportPage} />
-      <Route path="/plans" component={PlansPage} />
-      <Route path="/reseller" component={ResellerPage} />
-      <Route path="/bans" component={BansPage} />
+      <Route path="/licenses/create">
+        <Suspense fallback={<PageLoader />}>
+          <CreateKeysPage />
+        </Suspense>
+      </Route>
+      <Route path="/import">
+        <Suspense fallback={<PageLoader />}>
+          <ImportPage />
+        </Suspense>
+      </Route>
+      <Route path="/plans">
+        <Suspense fallback={<PageLoader />}>
+          <PlansPage />
+        </Suspense>
+      </Route>
+      <Route path="/reseller">
+        <Suspense fallback={<PageLoader />}>
+          <ResellerPage />
+        </Suspense>
+      </Route>
+      <Route path="/bans">
+        <Suspense fallback={<PageLoader />}>
+          <BansPage />
+        </Suspense>
+      </Route>
       {/* Fallback */}
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -167,6 +167,36 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    // Otimizações de build
+    minify: "terser",
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+      mangle: true,
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Separar dependências grandes em chunks
+          'react-vendor': ['react', 'react-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'chart-vendor': ['recharts'],
+          'form-vendor': ['react-hook-form', '@hookform/resolvers'],
+        },
+        // Otimizar nomes de chunks
+        chunkFileNames: 'chunks/[name]-[hash].js',
+        entryFileNames: '[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash][extname]',
+      },
+    },
+    // Aumentar limite de warning
+    chunkSizeWarningLimit: 600,
+    // Relatório de build
+    reportCompressedSize: false,
+    // Otimizações CSS
+    cssCodeSplit: true,
   },
   server: {
     host: true,
@@ -183,5 +213,12 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+    // Otimizações de dev server
+    middlewareMode: false,
+    preTransformRequests: ['/src/main.tsx'],
+  },
+  // Otimizações de cache
+  define: {
+    __DEV__: JSON.stringify(process.env.NODE_ENV !== 'production'),
   },
 });
