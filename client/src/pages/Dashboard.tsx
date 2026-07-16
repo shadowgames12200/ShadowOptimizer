@@ -27,71 +27,11 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { useState, useMemo, memo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 
-// Componentes de gráfico memoizados para evitar re-renderizações desnecessárias e erros de DOM
-const UsageChart = memo(({ data }: { data: any[] }) => (
-  <div className="h-[250px] w-full mt-4">
-    <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-        <XAxis 
-          dataKey="name" 
-          stroke="#52525b" 
-          fontSize={10} 
-          tickLine={false} 
-          axisLine={false} 
-        />
-        <YAxis 
-          stroke="#52525b" 
-          fontSize={10} 
-          tickLine={false} 
-          axisLine={false} 
-        />
-        <Tooltip 
-          contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-          itemStyle={{ color: '#8b5cf6', fontWeight: 'bold' }}
-        />
-        <Line 
-          type="monotone" 
-          dataKey="keys" 
-          stroke="#8b5cf6" 
-          strokeWidth={3} 
-          dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#09090b' }}
-          activeDot={{ r: 6, strokeWidth: 0 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
-  </div>
-));
-
-const DistributionChart = memo(({ data }: { data: any[] }) => (
-  <div className="h-[200px] w-full">
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={data}
-          innerRadius={60}
-          outerRadius={80}
-          paddingAngle={5}
-          dataKey="value"
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={entry.color} />
-          ))}
-        </Pie>
-      </PieChart>
-    </ResponsiveContainer>
-  </div>
-));
-
-export default function Dashboard() {
-  const { user, loading } = useAuth();
-  const { data: stats, isLoading: statsLoading } = trpc.licenses.getStats.useQuery(undefined, {
-    enabled: !!user
-  });
-
+// Componente para o Formulário de Geração de Key (Isolado para evitar conflito com gráficos)
+function GenerateKeyForm() {
   const [licenseType, setLicenseType] = useState("0");
   const [userId, setUserId] = useState("");
   const utils = trpc.useUtils();
@@ -117,6 +57,69 @@ export default function Dashboard() {
     });
   };
 
+  return (
+    <Card className="lg:col-span-3 bg-[#0c0c0e] border-white/5 card-glow">
+      <CardHeader>
+        <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gerar Nova Key</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Produto</label>
+          <Select defaultValue="lifetime">
+            <SelectTrigger className="bg-white/5 border-white/5 h-11">
+              <SelectValue placeholder="Selecione o produto" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="lifetime">Shadow Optimizer - Vitalício</SelectItem>
+              <SelectItem value="monthly">Shadow Optimizer - Mensal</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Tipo</label>
+          <Select value={licenseType} onValueChange={setLicenseType}>
+            <SelectTrigger className="bg-white/5 border-white/5 h-11">
+              <SelectValue placeholder="Selecione o tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="0">Vitalício</SelectItem>
+              <SelectItem value="30">Mensal (30 dias)</SelectItem>
+              <SelectItem value="90">Trimestral (90 dias)</SelectItem>
+              <SelectItem value="180">Semestral (180 dias)</SelectItem>
+              <SelectItem value="365">Anual (365 dias)</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Usuário</label>
+          <Input
+            placeholder="ID do usuário ou deixe em branco"
+            className="bg-white/5 border-white/5 h-11"
+            value={userId}
+            onChange={(e) => setUserId(e.target.value)}
+          />
+        </div>
+        <Button
+          className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-11 gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
+          onClick={handleGenerateKey}
+          disabled={createMutation.isPending}
+        >
+          <Zap className="w-4 h-4 fill-current" />
+          {createMutation.isPending ? "GERANDO..." : "GERAR KEY"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Componente para Gráficos (Isolado e com animações desativadas)
+function DashboardCharts({ statsLoading, totalKeys, activeKeys, revokedKeys, activePercent }: any) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const emptyUsageData = useMemo(() => [
     { name: 'Dia 1', keys: 0 },
     { name: 'Dia 2', keys: 0 },
@@ -130,6 +133,105 @@ export default function Dashboard() {
   const planData = useMemo(() => [
     { name: 'Vitalício', value: 100, color: '#8b5cf6' },
   ], []);
+
+  if (!isMounted) return <div className="h-[250px] w-full flex items-center justify-center"><Spinner /></div>;
+
+  return (
+    <>
+      {/* Estatísticas de Uso */}
+      <Card className="lg:col-span-6 bg-[#0c0c0e] border-white/5 card-glow">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Estatísticas de Uso</CardTitle>
+          <Select defaultValue="7">
+            <SelectTrigger className="w-24 bg-white/5 border-white/5 h-8 text-[10px]">
+              <SelectValue placeholder="Período" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="7">7 dias</SelectItem>
+              <SelectItem value="30">30 dias</SelectItem>
+            </SelectContent>
+          </Select>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[250px] w-full mt-4">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={emptyUsageData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                <XAxis dataKey="name" stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                <YAxis stroke="#52525b" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+                  itemStyle={{ color: '#8b5cf6', fontWeight: 'bold' }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="keys" 
+                  stroke="#8b5cf6" 
+                  strokeWidth={3} 
+                  isAnimationActive={false} // DESATIVADO PARA EVITAR ERRO DE DOM
+                  dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#09090b' }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Atividade Recente */}
+      <Card className="lg:col-span-3 bg-[#0c0c0e] border-white/5 card-glow">
+        <CardHeader>
+          <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Atividade Recente</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 mb-3">
+              <Activity className="w-5 h-5 text-primary" />
+            </div>
+            <p className="text-xs text-muted-foreground">Nenhuma atividade recente.</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Distribuição de Planos */}
+      <Card className="lg:col-span-4 bg-[#0c0c0e] border-white/5 card-glow">
+        <CardHeader>
+          <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Distribuição de Planos</CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center">
+          <div className="w-1/2 h-[150px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={planData}
+                  innerRadius={50}
+                  outerRadius={70}
+                  paddingAngle={5}
+                  dataKey="value"
+                  isAnimationActive={false} // DESATIVADO PARA EVITAR ERRO DE DOM
+                >
+                  {planData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="w-1/2 space-y-2">
+            <LegendItem color="bg-primary" label="Vitalício" value="0%" />
+            <LegendItem color="bg-blue-500" label="Mensal" value="0%" />
+            <LegendItem color="bg-pink-500" label="Trimestral" value="0%" />
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
+}
+
+export default function Dashboard() {
+  const { user, loading } = useAuth();
+  const { data: stats, isLoading: statsLoading } = trpc.licenses.getStats.useQuery(undefined, {
+    enabled: !!user
+  });
 
   if (loading) {
     return (
@@ -179,111 +281,14 @@ export default function Dashboard() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Gerar Nova Key */}
-          <Card className="lg:col-span-3 bg-[#0c0c0e] border-white/5 card-glow">
-            <CardHeader>
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Gerar Nova Key</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Produto</label>
-                <Select defaultValue="lifetime">
-                  <SelectTrigger className="bg-white/5 border-white/5 h-11">
-                    <SelectValue placeholder="Selecione o produto" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lifetime">Shadow Optimizer - Vitalício</SelectItem>
-                    <SelectItem value="monthly">Shadow Optimizer - Mensal</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Tipo</label>
-                <Select value={licenseType} onValueChange={setLicenseType}>
-                  <SelectTrigger className="bg-white/5 border-white/5 h-11">
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">Vitalício</SelectItem>
-                    <SelectItem value="30">Mensal (30 dias)</SelectItem>
-                    <SelectItem value="90">Trimestral (90 dias)</SelectItem>
-                    <SelectItem value="180">Semestral (180 dias)</SelectItem>
-                    <SelectItem value="365">Anual (365 dias)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Usuário</label>
-                <Input
-                  placeholder="ID do usuário ou deixe em branco"
-                  className="bg-white/5 border-white/5 h-11"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                />
-              </div>
-              <Button
-                className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-11 gap-2 shadow-[0_0_15px_rgba(139,92,246,0.3)]"
-                onClick={handleGenerateKey}
-                disabled={createMutation.isPending}
-              >
-                <Zap className="w-4 h-4 fill-current" />
-                {createMutation.isPending ? "GERANDO..." : "GERAR KEY"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Estatísticas de Uso */}
-          <Card className="lg:col-span-6 bg-[#0c0c0e] border-white/5 card-glow">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Estatísticas de Uso</CardTitle>
-              <Select defaultValue="7">
-                <SelectTrigger className="w-24 bg-white/5 border-white/5 h-8 text-[10px]">
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 dias</SelectItem>
-                  <SelectItem value="30">30 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardHeader>
-            <CardContent>
-              <UsageChart data={emptyUsageData} />
-            </CardContent>
-          </Card>
-
-          {/* Atividade Recente */}
-          <Card className="lg:col-span-3 bg-[#0c0c0e] border-white/5 card-glow">
-            <CardHeader>
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Atividade Recente</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 mb-3">
-                  <Activity className="w-5 h-5 text-primary" />
-                </div>
-                <p className="text-xs text-muted-foreground">Nenhuma atividade recente.</p>
-                <p className="text-[10px] text-muted-foreground/60 mt-1">As atividades aparecerão aqui.</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Distribuição de Planos */}
-          <Card className="lg:col-span-4 bg-[#0c0c0e] border-white/5 card-glow">
-            <CardHeader>
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Distribuição de Planos</CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center">
-              <div className="w-1/2">
-                <DistributionChart data={planData} />
-              </div>
-              <div className="w-1/2 space-y-2">
-                <LegendItem color="bg-primary" label="Vitalício" value="0%" />
-                <LegendItem color="bg-blue-500" label="Mensal" value="0%" />
-                <LegendItem color="bg-pink-500" label="Trimestral" value="0%" />
-              </div>
-            </CardContent>
-          </Card>
+          <GenerateKeyForm />
+          <DashboardCharts 
+            statsLoading={statsLoading} 
+            totalKeys={totalKeys} 
+            activeKeys={activeKeys} 
+            revokedKeys={revokedKeys} 
+            activePercent={activePercent} 
+          />
 
           {/* Sistemas Mais Utilizados */}
           <Card className="lg:col-span-4 bg-[#0c0c0e] border-white/5 card-glow">
