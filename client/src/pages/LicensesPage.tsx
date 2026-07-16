@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Copy, Trash2, Eye, AlertCircle } from "lucide-react";
+import { Plus, Copy, Trash2, Eye, AlertCircle, Clock, RefreshCw } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,6 +20,8 @@ export default function LicensesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [prefix, setPrefix] = useState("SHADOW");
   const [quantity, setQuantity] = useState(1);
+  const [showRenewDialog, setShowRenewDialog] = useState<number | null>(null);
+  const [renewDays, setRenewDays] = useState(30);
   const utils = trpc.useUtils();
 
   const createMutation = trpc.licenses.create.useMutation({
@@ -43,6 +45,32 @@ export default function LicensesPage() {
       toast.error(error.message || "Erro ao deletar chave");
     },
   });
+
+  const renewMutation = trpc.licenses.updateExpiration.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setShowRenewDialog(null);
+      utils.licenses.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao renovar chave");
+    },
+  });
+
+  const formatTimeLeft = (expiresAt: string | null) => {
+    if (!expiresAt) return "Nunca";
+    const now = new Date();
+    const expiration = new Date(expiresAt);
+    const diff = expiration.getTime() - now.getTime();
+    
+    if (diff <= 0) return "Expirada";
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    
+    if (days > 0) return `${days}d ${hours}h`;
+    return `${hours}h`;
+  };
 
   if (!user) {
     return (
@@ -179,9 +207,15 @@ export default function LicensesPage() {
                           )}
                         </TableCell>
                         <TableCell className="text-sm">
-                          {license.expiresAt
-                            ? new Date(license.expiresAt).toLocaleDateString("pt-BR")
-                            : "Nunca"}
+                          <div className="flex flex-col">
+                            <span>{license.expiresAt ? new Date(license.expiresAt).toLocaleDateString("pt-BR") : "Nunca"}</span>
+                            {license.expiresAt && (
+                              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                <Clock className="w-3 h-3" />
+                                {formatTimeLeft(license.expiresAt)}
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
                         <TableCell className="text-sm">
                           {new Date(license.createdAt).toLocaleDateString("pt-BR")}
@@ -195,6 +229,17 @@ export default function LicensesPage() {
                               title="Copiar chave"
                             >
                               <Copy className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              title="Renovar / Alterar Tempo"
+                              onClick={() => {
+                                setShowRenewDialog(license.id);
+                                setRenewDays(30);
+                              }}
+                            >
+                              <RefreshCw className="w-4 h-4" />
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -247,6 +292,45 @@ export default function LicensesPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Dialog de Renovação */}
+        <Dialog open={showRenewDialog !== null} onOpenChange={(open) => !open && setShowRenewDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Renovar ou Alterar Tempo da Chave</DialogTitle>
+              <DialogDescription>Defina o novo tempo de expiração a partir de agora.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="renewDays">Tempo (em dias)</Label>
+                <Input
+                  id="renewDays"
+                  type="number"
+                  step="0.01"
+                  value={renewDays}
+                  onChange={(e) => setRenewDays(parseFloat(e.target.value) || 0)}
+                  className="mt-1"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Ex: 1 dia = 1 | 1 hora = 0.04 | 0 = Vitalício
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => setRenewDays(0.0416)}>1 Hora</Button>
+                <Button variant="outline" onClick={() => setRenewDays(1)}>1 Dia</Button>
+                <Button variant="outline" onClick={() => setRenewDays(7)}>7 Dias</Button>
+                <Button variant="outline" onClick={() => setRenewDays(30)}>30 Dias</Button>
+              </div>
+              <Button
+                className="w-full"
+                onClick={() => showRenewDialog && renewMutation.mutate({ licenseId: showRenewDialog, expiresInDays: renewDays })}
+                disabled={renewMutation.isPending}
+              >
+                {renewMutation.isPending ? "Salvando..." : "Salvar Novo Tempo"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );

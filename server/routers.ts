@@ -164,16 +164,23 @@ export const appRouter = router({
 
         let expiresAt: Date | null = null;
         if (input.expiresInDays > 0) {
-          expiresAt = new Date();
-          expiresAt.setDate(expiresAt.getDate() + input.expiresInDays);
+          // Calculate expiration based on milliseconds to support hours (fractional days)
+          const msInDay = 24 * 60 * 60 * 1000;
+          expiresAt = new Date(Date.now() + input.expiresInDays * msInDay);
         }
 
         await db.updateLicenseExpiration(input.licenseId, expiresAt);
+        
+        // If updating expiration, we should also ensure status is active
+        if (license.status !== 'active') {
+          await db.updateLicenseStatus(input.licenseId, 'active');
+        }
+
         return {
           success: true,
           message: input.expiresInDays === 0
             ? "Chave atualizada para Vitalício"
-            : `Chave atualizada para expirar em ${input.expiresInDays} dias`,
+            : `Chave renovada com sucesso!`,
         };
       }),
 
