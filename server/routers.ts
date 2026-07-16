@@ -4,6 +4,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { authRouter } from "./auth";
 import * as db from "./db";
 import { createLicenseProcedure, revokeLicenseProcedure, deleteLicenseProcedure } from "./licenses.create";
+import { z } from "zod";
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -141,6 +142,60 @@ export const appRouter = router({
      * Admin: Delete a license
      */
     delete: deleteLicenseProcedure,
+
+    /**
+     * Admin: Update license expiration date
+     * expiresInDays: number of days from now, or 0 for lifetime (no expiration)
+     */
+    updateExpiration: protectedProcedure
+      .input(
+        z.object({
+          licenseId: z.number(),
+          expiresInDays: z.number().min(0),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        // Verify ownership
+        const userLicenses = await db.getLicensesByUser(ctx.user.id);
+        const license = userLicenses.find((l) => l.id === input.licenseId);
+        if (!license) {
+          throw new Error("Chave não encontrada ou sem permissão");
+        }
+
+        let expiresAt: Date | null = null;
+        if (input.expiresInDays > 0) {
+          expiresAt = new Date();
+          expiresAt.setDate(expiresAt.getDate() + input.expiresInDays);
+        }
+
+        await db.updateLicenseExpiration(input.licenseId, expiresAt);
+        return {
+          success: true,
+          message: input.expiresInDays === 0
+            ? "Chave atualizada para Vitalício"
+            : `Chave atualizada para expirar em ${input.expiresInDays} dias`,
+        };
+      }),
+
+    /**
+     * Admin: Update license status (active/revoked/expired)
+     */
+    updateStatus: protectedProcedure
+      .input(
+        z.object({
+          licenseId: z.number(),
+          status: z.enum(["active", "revoked", "expired"]),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const userLicenses = await db.getLicensesByUser(ctx.user.id);
+        const license = userLicenses.find((l) => l.id === input.licenseId);
+        if (!license) {
+          throw new Error("Chave não encontrada ou sem permissão");
+        }
+        await db.updateLicenseStatus(input.licenseId, input.status);
+        return { success: true, message: "Status atualizado com sucesso" };
+      }),
   }),
 
   // TODO: add feature routers here, e.g.

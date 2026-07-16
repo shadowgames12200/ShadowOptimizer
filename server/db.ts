@@ -176,6 +176,23 @@ export async function updateLicenseStatus(
 }
 
 /**
+ * Update license expiration date
+ * Pass null to make it lifetime (no expiration)
+ */
+export async function updateLicenseExpiration(
+  licenseId: number,
+  expiresAt: Date | null
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .update(licenses)
+    .set({ expiresAt, updatedAt: new Date() })
+    .where(eq(licenses.id, licenseId));
+}
+
+/**
  * Bind HWID to a license
  */
 export async function bindHwidToLicense(
