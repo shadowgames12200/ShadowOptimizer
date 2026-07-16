@@ -279,3 +279,26 @@ export async function getLicenseStats(userId: number) {
     deniedAttempts: deniedLogs.length,
   };
 }
+
+/**
+ * Delete all licenses for a user
+ */
+export async function deleteAllLicensesByUser(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // First get license IDs to delete related logs
+  const userLicenses = await db
+    .select({ id: licenses.id })
+    .from(licenses)
+    .where(eq(licenses.createdByUserId, userId));
+  
+  const licenseIds = userLicenses.map(l => l.id);
+
+  if (licenseIds.length > 0) {
+    // Delete logs first due to foreign key constraints
+    await db.delete(accessLogs).where(inArray(accessLogs.licenseId, licenseIds));
+    // Delete licenses
+    await db.delete(licenses).where(inArray(licenses.id, licenseIds));
+  }
+}

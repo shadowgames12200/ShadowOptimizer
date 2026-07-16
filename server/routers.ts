@@ -144,6 +144,14 @@ export const appRouter = router({
     delete: deleteLicenseProcedure,
 
     /**
+     * Admin: Delete all licenses for the current user
+     */
+    deleteAll: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.deleteAllLicensesByUser(ctx.user.id);
+      return { success: true, message: "Todas as chaves foram apagadas" };
+    }),
+
+    /**
      * Admin: Update license expiration date
      * expiresInDays: number of days from now, or 0 for lifetime (no expiration)
      */

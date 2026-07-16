@@ -46,6 +46,16 @@ export default function LicensesPage() {
     },
   });
 
+  const deleteAllMutation = trpc.licenses.deleteAll.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message);
+      utils.licenses.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Erro ao apagar todas as chaves");
+    },
+  });
+
   const renewMutation = trpc.licenses.updateExpiration.useMutation({
     onSuccess: (data) => {
       toast.success(data.message);
@@ -166,9 +176,27 @@ export default function LicensesPage() {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Todas as Chaves de Licença</CardTitle>
-            <CardDescription>Total: {licenses?.length || 0} chaves</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle>Todas as Chaves de Licença</CardTitle>
+              <CardDescription>Total: {licenses?.length || 0} chaves</CardDescription>
+            </div>
+            {licenses && licenses.length > 0 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-red-600 border-red-200 hover:bg-red-50"
+                onClick={() => {
+                  if (confirm("TEM CERTEZA? Isso vai apagar TODAS as suas chaves e logs permanentemente!")) {
+                    deleteAllMutation.mutate();
+                  }
+                }}
+                disabled={deleteAllMutation.isPending}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                {deleteAllMutation.isPending ? "Apagando..." : "Apagar Tudo"}
+              </Button>
+            )}
           </CardHeader>
           <CardContent>
             {isLoading ? (
