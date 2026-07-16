@@ -10,10 +10,8 @@ import {
   CheckCircle, 
   Ban, 
   DollarSign, 
-  TrendingUp, 
   Activity, 
   Zap,
-  Circle
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Spinner } from "@/components/ui/spinner";
@@ -29,22 +27,64 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { useState } from "react";
+import { useState, useMemo, memo } from "react";
 import { toast } from "sonner";
 
-const emptyUsageData = [
-  { name: 'Dia 1', keys: 0 },
-  { name: 'Dia 2', keys: 0 },
-  { name: 'Dia 3', keys: 0 },
-  { name: 'Dia 4', keys: 0 },
-  { name: 'Dia 5', keys: 0 },
-  { name: 'Dia 6', keys: 0 },
-  { name: 'Dia 7', keys: 0 },
-];
+// Componentes de gráfico memoizados para evitar re-renderizações desnecessárias e erros de DOM
+const UsageChart = memo(({ data }: { data: any[] }) => (
+  <div className="h-[250px] w-full mt-4">
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data}>
+        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+        <XAxis 
+          dataKey="name" 
+          stroke="#52525b" 
+          fontSize={10} 
+          tickLine={false} 
+          axisLine={false} 
+        />
+        <YAxis 
+          stroke="#52525b" 
+          fontSize={10} 
+          tickLine={false} 
+          axisLine={false} 
+        />
+        <Tooltip 
+          contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
+          itemStyle={{ color: '#8b5cf6', fontWeight: 'bold' }}
+        />
+        <Line 
+          type="monotone" 
+          dataKey="keys" 
+          stroke="#8b5cf6" 
+          strokeWidth={3} 
+          dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#09090b' }}
+          activeDot={{ r: 6, strokeWidth: 0 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  </div>
+));
 
-const planData = [
-  { name: 'Vitalício', value: 100, color: '#8b5cf6' },
-];
+const DistributionChart = memo(({ data }: { data: any[] }) => (
+  <div className="h-[200px] w-full">
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={data}
+          innerRadius={60}
+          outerRadius={80}
+          paddingAngle={5}
+          dataKey="value"
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Pie>
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+));
 
 export default function Dashboard() {
   const { user, loading } = useAuth();
@@ -76,6 +116,20 @@ export default function Dashboard() {
       expiresInDays: days > 0 ? days : undefined,
     });
   };
+
+  const emptyUsageData = useMemo(() => [
+    { name: 'Dia 1', keys: 0 },
+    { name: 'Dia 2', keys: 0 },
+    { name: 'Dia 3', keys: 0 },
+    { name: 'Dia 4', keys: 0 },
+    { name: 'Dia 5', keys: 0 },
+    { name: 'Dia 6', keys: 0 },
+    { name: 'Dia 7', keys: 0 },
+  ], []);
+
+  const planData = useMemo(() => [
+    { name: 'Vitalício', value: 100, color: '#8b5cf6' },
+  ], []);
 
   if (loading) {
     return (
@@ -116,41 +170,11 @@ export default function Dashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard 
-            title="Total de Usuários" 
-            value="0" 
-            change="0 hoje" 
-            icon={Users} 
-            color="bg-primary"
-          />
-          <StatCard 
-            title="Keys Geradas" 
-            value={statsLoading ? "..." : String(totalKeys)}
-            change="0 hoje" 
-            icon={Key} 
-            color="bg-purple-500"
-          />
-          <StatCard 
-            title="Keys Ativas" 
-            value={statsLoading ? "..." : String(activeKeys)}
-            change={`${activePercent}%`}
-            icon={CheckCircle} 
-            color="bg-green-500"
-          />
-          <StatCard 
-            title="Keys Banidas" 
-            value={statsLoading ? "..." : String(revokedKeys)}
-            change="0 hoje" 
-            icon={Ban} 
-            color="bg-red-500"
-          />
-          <StatCard 
-            title="Faturamento" 
-            value="R$ 0" 
-            change="0%" 
-            icon={DollarSign} 
-            color="bg-blue-500"
-          />
+          <StatCard title="Total de Usuários" value="0" change="0 hoje" icon={Users} color="bg-primary" />
+          <StatCard title="Keys Geradas" value={statsLoading ? "..." : String(totalKeys)} change="0 hoje" icon={Key} color="bg-purple-500" />
+          <StatCard title="Keys Ativas" value={statsLoading ? "..." : String(activeKeys)} change={`${activePercent}%`} icon={CheckCircle} color="bg-green-500" />
+          <StatCard title="Keys Banidas" value={statsLoading ? "..." : String(revokedKeys)} change="0 hoje" icon={Ban} color="bg-red-500" />
+          <StatCard title="Faturamento" value="R$ 0" change="0%" icon={DollarSign} color="bg-blue-500" />
         </div>
 
         {/* Main Content Grid */}
@@ -224,38 +248,7 @@ export default function Dashboard() {
               </Select>
             </CardHeader>
             <CardContent>
-              <div className="h-[250px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={emptyUsageData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                    <XAxis 
-                      dataKey="name" 
-                      stroke="#52525b" 
-                      fontSize={10} 
-                      tickLine={false} 
-                      axisLine={false} 
-                    />
-                    <YAxis 
-                      stroke="#52525b" 
-                      fontSize={10} 
-                      tickLine={false} 
-                      axisLine={false} 
-                    />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px' }}
-                      itemStyle={{ color: '#8b5cf6', fontWeight: 'bold' }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="keys" 
-                      stroke="#8b5cf6" 
-                      strokeWidth={3} 
-                      dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 4, stroke: '#09090b' }}
-                      activeDot={{ r: 6, strokeWidth: 0 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              <UsageChart data={emptyUsageData} />
             </CardContent>
           </Card>
 
@@ -281,45 +274,13 @@ export default function Dashboard() {
               <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Distribuição de Planos</CardTitle>
             </CardHeader>
             <CardContent className="flex items-center">
-              <div className="h-[200px] w-1/2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={planData}
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={5}
-                      dataKey="value"
-                    >
-                      {planData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
+              <div className="w-1/2">
+                <DistributionChart data={planData} />
               </div>
               <div className="w-1/2 space-y-2">
-                <div className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                    <span className="text-muted-foreground font-medium">Vitalício</span>
-                  </div>
-                  <span className="text-white font-bold">0%</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-blue-500" />
-                    <span className="text-muted-foreground font-medium">Mensal</span>
-                  </div>
-                  <span className="text-white font-bold">0%</span>
-                </div>
-                <div className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-pink-500" />
-                    <span className="text-muted-foreground font-medium">Trimestral</span>
-                  </div>
-                  <span className="text-white font-bold">0%</span>
-                </div>
+                <LegendItem color="bg-primary" label="Vitalício" value="0%" />
+                <LegendItem color="bg-blue-500" label="Mensal" value="0%" />
+                <LegendItem color="bg-pink-500" label="Trimestral" value="0%" />
               </div>
             </CardContent>
           </Card>
@@ -344,31 +305,10 @@ export default function Dashboard() {
               <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Informações do Sistema</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="text-muted-foreground font-medium uppercase">Versão do Painel</span>
-                <span className="text-primary font-bold">v2.5.0</span>
-              </div>
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="text-muted-foreground font-medium uppercase">Versão do Produto</span>
-                <span className="text-primary font-bold">v3.1.7</span>
-              </div>
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="text-muted-foreground font-medium uppercase">Usuários Online</span>
-                <span className="text-green-500 font-bold">0</span>
-              </div>
-              <div className="flex justify-between items-center text-[10px]">
-                <span className="text-muted-foreground font-medium uppercase">Keys Ativas</span>
-                <span className="text-white font-bold">{statsLoading ? "..." : `${activeKeys} / ${totalKeys}`}</span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between text-[10px]">
-                  <span className="text-muted-foreground font-medium uppercase">Uso do Servidor</span>
-                  <span className="text-white font-bold">0%</span>
-                </div>
-                <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-primary h-full w-0 shadow-[0_0_10px_rgba(139,92,246,0.5)]" />
-                </div>
-              </div>
+              <SystemInfoItem label="Versão do Painel" value="v2.5.0" />
+              <SystemInfoItem label="Versão do Produto" value="v3.1.7" />
+              <SystemInfoItem label="Status API" value="Conectado" color="text-green-500" />
+              <SystemInfoItem label="Banco de Dados" value="TiDB Cloud" />
             </CardContent>
           </Card>
         </div>
@@ -380,53 +320,54 @@ export default function Dashboard() {
 function StatCard({ title, value, change, icon: Icon, color }: any) {
   return (
     <Card className="bg-[#0c0c0e] border-white/5 card-glow overflow-hidden group">
-      <CardContent className="p-4 relative">
-        <div className={`absolute top-0 right-0 w-16 h-16 ${color} opacity-[0.03] rounded-bl-full group-hover:opacity-[0.08] transition-opacity`} />
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 ${color} bg-opacity-10 rounded-xl flex items-center justify-center border border-white/5`}>
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className={`w-10 h-10 ${color}/10 rounded-xl flex items-center justify-center border border-white/5 group-hover:scale-110 transition-transform`}>
             <Icon className={`w-5 h-5 ${color.replace('bg-', 'text-')}`} />
           </div>
-          <div className="space-y-1">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{title}</p>
-            <div className="flex items-baseline gap-2">
-              <h3 className="text-lg font-black text-white">{value}</h3>
-              <span className="text-[9px] font-bold text-primary">{change}</span>
-            </div>
-          </div>
+          <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-wider">{change}</span>
+        </div>
+        <div className="space-y-1">
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest opacity-60">{title}</p>
+          <p className="text-2xl font-black text-white tracking-tighter italic uppercase">{value}</p>
         </div>
       </CardContent>
+      <div className={`h-1 w-full ${color} opacity-20`} />
     </Card>
   );
 }
 
-function ActivityItem({ icon: Icon, title, user, time, color }: any) {
+function LegendItem({ color, label, value }: any) {
   return (
-    <div className="flex items-center gap-3">
-      <div className={`w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center shrink-0`}>
-        <Icon className={`w-4 h-4 ${color}`} />
+    <div className="flex items-center justify-between text-[10px]">
+      <div className="flex items-center gap-2">
+        <div className={`w-2 h-2 rounded-full ${color}`} />
+        <span className="text-muted-foreground font-medium">{label}</span>
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-bold text-white leading-none">{title}</p>
-        <p className="text-[10px] text-muted-foreground mt-1">Usuário: <span className="text-white/70">{user}</span></p>
-      </div>
-      <div className="flex items-center gap-1.5 shrink-0">
-        <span className="text-[9px] text-muted-foreground">{time}</span>
-        <Circle className="w-1.5 h-1.5 fill-green-500 text-green-500" />
-      </div>
+      <span className="text-white font-bold">{value}</span>
     </div>
   );
 }
 
 function ProgressItem({ label, value, color }: any) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between text-[10px]">
-        <span className="text-muted-foreground font-medium uppercase">{label}</span>
-        <span className="text-white font-bold">{value}%</span>
+    <div className="space-y-2">
+      <div className="flex justify-between text-[10px] uppercase font-bold tracking-wider">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="text-white">{value}%</span>
       </div>
-      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-        <div className={`${color} h-full`} style={{ width: `${value}%` }} />
+      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+        <div className={`h-full ${color} transition-all duration-500`} style={{ width: `${value}%` }} />
       </div>
+    </div>
+  );
+}
+
+function SystemInfoItem({ label, value, color = "text-primary" }: any) {
+  return (
+    <div className="flex justify-between items-center text-[10px]">
+      <span className="text-muted-foreground font-medium uppercase">{label}</span>
+      <span className={`${color} font-bold`}>{value}</span>
     </div>
   );
 }
