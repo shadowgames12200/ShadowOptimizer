@@ -76,7 +76,7 @@ function GenerateKeyForm() {
               <SelectValue placeholder="Selecione a categoria" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="shadow_optimizer">Shadow Optimizer</SelectItem>
+              <SelectItem value="shadow_optimizer">Shadow Games</SelectItem>
               <SelectItem value="shadow_1071">Shadow 1071 Jogos</SelectItem>
             </SelectContent>
           </Select>
@@ -281,7 +281,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl font-black tracking-tight text-white uppercase italic">Dashboard</h1>
-            <p className="text-xs text-muted-foreground">Visão geral do sistema Shadow Optimizer</p>
+            <p className="text-xs text-muted-foreground">Visão geral do sistema Shadow Games</p>
           </div>
           <div className="flex items-center gap-3 bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl">
             <Activity className="w-4 h-4 text-primary animate-pulse" />
