@@ -59,7 +59,7 @@ function SystemContent() {
         <CardContent className="space-y-4">
           <div className="flex justify-between items-center text-[10px] border-b border-white/5 pb-3">
             <span className="text-muted-foreground font-medium uppercase">Plataforma</span>
-            <span className="text-white font-bold">Shadow Games</span>
+            <span className="text-white font-bold">Shadow Optimizer</span>
           </div>
           <div className="flex justify-between items-center text-[10px] border-b border-white/5 pb-3">
             <span className="text-muted-foreground font-medium uppercase">Ambiente</span>
@@ -84,3 +84,4 @@ export default function SystemPage() {
     </DashboardLayout>
   );
 }
+
