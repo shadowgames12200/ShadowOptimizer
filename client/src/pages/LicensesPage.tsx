@@ -68,7 +68,7 @@ export default function LicensesPage() {
     },
   });
 
-  const formatTimeLeft = (expiresAt: string | null) => {
+  const formatTimeLeft = (expiresAt: string | Date | null) => {
     if (!expiresAt) return "Nunca";
     const now = new Date();
     const expiration = new Date(expiresAt);

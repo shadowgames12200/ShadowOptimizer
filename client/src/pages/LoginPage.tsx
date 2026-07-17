@@ -40,7 +40,7 @@ export function LoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="charles12200"
+                placeholder="Digite seu usuário"
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}

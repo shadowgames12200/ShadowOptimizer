@@ -1,5 +1,4 @@
 import { eq, desc, inArray } from "drizzle-orm";
-import { users } from "../drizzle/schema";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import { InsertUser, users, licenses, accessLogs, InsertLicense } from "../drizzle/schema";
@@ -24,7 +23,7 @@ export async function getDb() {
         keepAliveInitialDelay: 10000,
       });
       
-      _db = drizzle(connection);
+      _db = drizzle(connection) as any;
       console.log("[Database] Connection pool established successfully");
     } catch (error) {
       console.error("[Database] Failed to connect:", error);

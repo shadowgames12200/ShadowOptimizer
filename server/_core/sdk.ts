@@ -220,7 +220,7 @@ class SDKServer {
 
       return {
         openId,
-        appId,
+        appId: (appId as string) || "",
         name: (name as string) || "",
       };
     } catch (error) {

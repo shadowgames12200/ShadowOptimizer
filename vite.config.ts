@@ -208,7 +208,6 @@ export default defineConfig({
     },
     // Otimizações de dev server
     middlewareMode: false,
-    preTransformRequests: ['/src/main.tsx'],
   },
   // Otimizações de cache
   define: {

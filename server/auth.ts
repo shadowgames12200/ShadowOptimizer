@@ -34,9 +34,8 @@ export const authRouter = router({
       }
 
       // Create session token
-      const sessionToken = await sdk.createSessionToken(user.openId, { 
-        name: user.name || user.username || user.openId,
-        appId: ENV.appId || "shadow-optimizer"
+      const sessionToken = await sdk.createSessionToken(user.openId || user.id.toString(), { 
+        name: user.name || user.username || user.openId || ""
       });
 
       // Set cookie
