@@ -50,6 +50,7 @@ const mainMenuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Users, label: "Usuários", path: "/users" },
   { icon: Key, label: "Keys", path: "/licenses" },
+  { icon: Zap, label: "Shadow 1071", path: "/shadow-1071" },
   { icon: Package, label: "Produtos", path: "/products" },
   { icon: FileText, label: "Logs", path: "/logs" },
   { icon: Monitor, label: "Sistema", path: "/system" },

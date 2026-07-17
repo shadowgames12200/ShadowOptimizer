@@ -9,15 +9,18 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Copy, Trash2, Eye, AlertCircle, Clock, RefreshCw } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function LicensesPage() {
   const { user } = useAuth();
   const { data: licenses, isLoading } = trpc.licenses.list.useQuery();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [product, setProduct] = useState<"shadow_optimizer" | "shadow_1071">("shadow_optimizer");
   const [prefix, setPrefix] = useState("SHADOW");
   const [quantity, setQuantity] = useState(1);
   const [createDays, setCreateDays] = useState(30);
@@ -98,6 +101,7 @@ export default function LicensesPage() {
       prefix,
       quantity,
       expiresInDays: createDays,
+      product,
     });
   };
 
@@ -144,6 +148,21 @@ export default function LicensesPage() {
                 <DialogDescription>Crie uma ou mais chaves de licença com um prefixo personalizado</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
+                <div>
+                  <Label htmlFor="product">Categoria</Label>
+                  <Select value={product} onValueChange={(val: any) => {
+                    setProduct(val);
+                    setPrefix(val === "shadow_1071" ? "S1071" : "SHADOW");
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="shadow_optimizer">Shadow Optimizer</SelectItem>
+                      <SelectItem value="shadow_1071">Shadow 1071 Jogos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div>
                   <Label htmlFor="prefix">Prefixo da Chave</Label>
                   <Input

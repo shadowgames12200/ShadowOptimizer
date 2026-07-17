@@ -33,7 +33,7 @@ export type InsertUser = typeof users.$inferInsert;
  */
 export const licenses = mysqlTable("licenses", {
   id: int("id").autoincrement().primaryKey(),
-  /** Unique license key in format SHADOW-XXXX-XXXX */
+  /** Unique license key in format PREFIX-XXXX-XXXX */
   key: varchar("key", { length: 64 }).notNull().unique(),
   /** Status of the license: active, revoked, or expired */
   status: mysqlEnum("status", ["active", "revoked", "expired"]).default("active").notNull(),
@@ -43,6 +43,8 @@ export const licenses = mysqlTable("licenses", {
   boundHwid: varchar("boundHwid", { length: 256 }),
   /** Whether the license has been activated at least once */
   activated: int("activated").default(0).notNull(),
+  /** Product category: shadow_optimizer or shadow_1071 */
+  product: mysqlEnum("product", ["shadow_optimizer", "shadow_1071"]).default("shadow_optimizer").notNull(),
   /** Owner user ID who created this license */
   createdByUserId: int("createdByUserId").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -148,6 +148,22 @@ export async function getLicensesByUser(userId: number) {
 }
 
 /**
+ * Get licenses for a user filtered by product
+ */
+export async function getLicensesByUserAndProduct(userId: number, product: "shadow_optimizer" | "shadow_1071") {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(licenses)
+    .where(
+      eq(licenses.createdByUserId, userId) &&
+      eq(licenses.product, product)
+    );
+}
+
+/**
  * Create a new license
  */
 export async function createLicense(license: InsertLicense) {

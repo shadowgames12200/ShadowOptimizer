@@ -119,6 +119,30 @@ export const appRouter = router({
     }),
 
     /**
+     * Admin: List licenses by product category
+     */
+    listByProduct: protectedProcedure
+      .input(
+        z.object({
+          product: z.enum(["shadow_optimizer", "shadow_1071"]),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        const licenses = await db.getLicensesByUserAndProduct(ctx.user.id, input.product);
+        const now = new Date();
+        
+        // Update expired status in background if needed
+        for (const license of licenses) {
+          if (license.status === "active" && license.expiresAt && now > new Date(license.expiresAt)) {
+            await db.updateLicenseStatus(license.id, "expired");
+            license.status = "expired";
+          }
+        }
+        
+        return licenses;
+      }),
+
+    /**
      * Admin: Get access logs for a specific license
      */
     getAccessLogs: protectedProcedure
@@ -138,6 +162,24 @@ export const appRouter = router({
     getStats: protectedProcedure.query(async ({ ctx }) => {
       return await db.getLicenseStats(ctx.user.id);
     }),
+
+    /**
+     * Admin: Get statistics by product
+     */
+    getStatsByProduct: protectedProcedure
+      .input(
+        z.object({
+          product: z.enum(["shadow_optimizer", "shadow_1071"]),
+        })
+      )
+      .query(async ({ input, ctx }) => {
+        const licenses = await db.getLicensesByUserAndProduct(ctx.user.id, input.product);
+        const total = licenses.length;
+        const active = licenses.filter((l) => l.status === "active").length;
+        const expired = licenses.filter((l) => l.status === "expired").length;
+        const revoked = licenses.filter((l) => l.status === "revoked").length;
+        return { total, active, expired, revoked, deniedAttempts: 0 };
+      }),
 
     /**
      * Admin: Create new license keys

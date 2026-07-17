@@ -24,6 +24,7 @@ const ImportPage = lazy(() => import("./pages/ImportPage"));
 const PlansPage = lazy(() => import("./pages/PlansPage"));
 const ResellerPage = lazy(() => import("./pages/ResellerPage"));
 const BansPage = lazy(() => import("./pages/BansPage"));
+const Shadow1071Page = lazy(() => import("./pages/Shadow1071Page"));
 
 // Componente de loading otimizado
 const PageLoader = () => (
@@ -131,6 +132,11 @@ function Router() {
       <Route path="/bans">
         <Suspense fallback={<PageLoader />}>
           <BansPage />
+        </Suspense>
+      </Route>
+      <Route path="/shadow-1071">
+        <Suspense fallback={<PageLoader />}>
+          <Shadow1071Page />
         </Suspense>
       </Route>
           {/* Fallback */}

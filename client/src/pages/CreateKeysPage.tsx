@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 
 function CreateKeysContent() {
+  const [product, setProduct] = useState<"shadow_optimizer" | "shadow_1071">("shadow_optimizer");
   const [prefix, setPrefix] = useState("SHADOW");
   const [quantity, setQuantity] = useState("1");
   const [expiresInDays, setExpiresInDays] = useState("0");
@@ -40,6 +41,7 @@ function CreateKeysContent() {
       prefix: prefix || "SHADOW",
       quantity: qty,
       expiresInDays: days > 0 ? days : 0,
+      product,
     });
   };
 
@@ -91,18 +93,17 @@ function CreateKeysContent() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Produto</label>
-              <Select defaultValue="lifetime">
+              <label className="text-[10px] font-bold uppercase text-muted-foreground/60">Categoria</label>
+              <Select value={product} onValueChange={(val: any) => {
+                setProduct(val);
+                setPrefix(val === "shadow_1071" ? "S1071" : "SHADOW");
+              }}>
                 <SelectTrigger className="bg-white/5 border-white/5 h-11">
-                  <SelectValue placeholder="Selecione o produto" />
+                  <SelectValue placeholder="Selecione a categoria" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="test">Shadow Optimizer - Teste (1 hora)</SelectItem>
-                  <SelectItem value="lifetime">Shadow Optimizer - Vitalício</SelectItem>
-                  <SelectItem value="monthly">Shadow Optimizer - Mensal (30 dias)</SelectItem>
-                  <SelectItem value="quarterly">Shadow Optimizer - Trimestral (90 dias)</SelectItem>
-                  <SelectItem value="semiannual">Shadow Optimizer - Semestral (180 dias)</SelectItem>
-                  <SelectItem value="annual">Shadow Optimizer - Anual (365 dias)</SelectItem>
+                  <SelectItem value="shadow_optimizer">Shadow Optimizer</SelectItem>
+                  <SelectItem value="shadow_1071">Shadow 1071 Jogos</SelectItem>
                 </SelectContent>
               </Select>
             </div>

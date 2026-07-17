@@ -21,10 +21,11 @@ export const createLicenseProcedure = protectedProcedure
       prefix: z.string().min(1).max(20).default("SHADOW"),
       quantity: z.number().min(1).max(100).default(1),
       expiresInDays: z.number().min(0).optional(),
+      product: z.enum(["shadow_optimizer", "shadow_1071"]).default("shadow_optimizer"),
     })
   )
   .mutation(async ({ input, ctx }) => {
-    const { prefix, quantity, expiresInDays } = input;
+    const { prefix, quantity, expiresInDays, product } = input;
 
     try {
       const createdKeys: string[] = [];
@@ -46,6 +47,7 @@ export const createLicenseProcedure = protectedProcedure
           key,
           status: "active",
           expiresAt,
+          product,
           createdByUserId: ctx.user!.id,
         });
 
