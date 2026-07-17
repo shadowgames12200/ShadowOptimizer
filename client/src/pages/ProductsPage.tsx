@@ -23,7 +23,7 @@ function ProductsContent() {
             <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center border border-primary/20 mb-4">
               <Package className="w-8 h-8 text-primary" />
             </div>
-            <p className="text-sm font-bold text-white">Shadow Games</p>
+            <p className="text-sm font-bold text-white">Shadow Optimizer</p>
             <p className="text-xs text-muted-foreground mt-2">Otimizador de sombras para FiveM e outros jogos.</p>
           </div>
         </CardContent>
@@ -41,3 +41,4 @@ export default function ProductsPage() {
     </DashboardLayout>
   );
 }
+
