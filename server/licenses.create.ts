@@ -36,8 +36,9 @@ export const createLicenseProcedure = protectedProcedure
         let expiresAt: Date | null = null;
         if (expiresInDays !== undefined && expiresInDays > 0) {
           expiresAt = new Date();
-          const msInDay = 24 * 60 * 60 * 1000;
-          expiresAt.setTime(expiresAt.getTime() + (expiresInDays * msInDay));
+          // Use exact millisecond calculation for precision (minutes, hours, etc.)
+          const msToAdd = Math.round(expiresInDays * 24 * 60 * 60 * 1000);
+          expiresAt.setTime(expiresAt.getTime() + msToAdd);
         }
 
         // Create license in database

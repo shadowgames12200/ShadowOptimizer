@@ -20,6 +20,7 @@ export default function LicensesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const [prefix, setPrefix] = useState("SHADOW");
   const [quantity, setQuantity] = useState(1);
+  const [createDays, setCreateDays] = useState(30);
   const [showRenewDialog, setShowRenewDialog] = useState<number | null>(null);
   const [renewDays, setRenewDays] = useState(30);
   const utils = trpc.useUtils();
@@ -77,9 +78,11 @@ export default function LicensesPage() {
     
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
     if (days > 0) return `${days}d ${hours}h`;
-    return `${hours}h`;
+    if (hours > 0) return `${hours}h ${minutes}m`;
+    return `${minutes}m`;
   };
 
   if (!user) {
@@ -94,6 +97,7 @@ export default function LicensesPage() {
     createMutation.mutate({
       prefix,
       quantity,
+      expiresInDays: createDays,
     });
   };
 
@@ -151,25 +155,44 @@ export default function LicensesPage() {
                   />
                   <p className="text-xs text-muted-foreground mt-1">Formato: PREFIXO-XXXX-XXXX</p>
                 </div>
-                <div>
-                  <Label htmlFor="quantity">Quantidade</Label>
-                  <Input
-                    id="quantity"
-                    type="number"
-                    min="1"
-                    max="100"
-                    value={quantity}
-                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
-                    className="mt-1"
-                  />
-                </div>
-                <Button
-                  onClick={handleGenerateKeys}
-                  className="w-full"
-                  disabled={createMutation.isPending}
-                >
-                  {createMutation.isPending ? "Criando..." : `Gerar ${quantity} Chave${quantity !== 1 ? "s" : ""}`}
-                </Button>
+	                <div>
+	                  <Label htmlFor="quantity">Quantidade</Label>
+	                  <Input
+	                    id="quantity"
+	                    type="number"
+	                    min="1"
+	                    max="100"
+	                    value={quantity}
+	                    onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+	                    className="mt-1"
+	                  />
+	                </div>
+                  <div>
+                    <Label htmlFor="createDays">Tempo de Expiração (em dias)</Label>
+                    <Input
+                      id="createDays"
+                      type="number"
+                      step="0.0001"
+                      value={createDays}
+                      onChange={(e) => setCreateDays(parseFloat(e.target.value) || 0)}
+                      className="mt-1"
+                    />
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      <Button variant="outline" size="sm" onClick={() => setCreateDays(0.0007)}>1m</Button>
+                      <Button variant="outline" size="sm" onClick={() => setCreateDays(0.0416)}>1h</Button>
+                      <Button variant="outline" size="sm" onClick={() => setCreateDays(1)}>1d</Button>
+                      <Button variant="outline" size="sm" onClick={() => setCreateDays(7)}>7d</Button>
+                      <Button variant="outline" size="sm" onClick={() => setCreateDays(30)}>30d</Button>
+                      <Button variant="outline" size="sm" onClick={() => setCreateDays(0)}>Vit.</Button>
+                    </div>
+                  </div>
+	                <Button
+	                  onClick={handleGenerateKeys}
+	                  className="w-full mt-4"
+	                  disabled={createMutation.isPending}
+	                >
+	                  {createMutation.isPending ? "Criando..." : `Gerar ${quantity} Chave${quantity !== 1 ? "s" : ""}`}
+	                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -343,11 +366,13 @@ export default function LicensesPage() {
                   Ex: 1 dia = 1 | 1 hora = 0.04 | 0 = Vitalício
                 </p>
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
+                <Button variant="outline" onClick={() => setRenewDays(0.0007)}>1 Minuto</Button>
                 <Button variant="outline" onClick={() => setRenewDays(0.0416)}>1 Hora</Button>
                 <Button variant="outline" onClick={() => setRenewDays(1)}>1 Dia</Button>
                 <Button variant="outline" onClick={() => setRenewDays(7)}>7 Dias</Button>
                 <Button variant="outline" onClick={() => setRenewDays(30)}>30 Dias</Button>
+                <Button variant="outline" onClick={() => setRenewDays(0)}>Vitalício</Button>
               </div>
               <Button
                 className="w-full"
