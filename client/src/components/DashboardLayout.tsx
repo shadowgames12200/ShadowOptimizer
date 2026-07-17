@@ -87,7 +87,7 @@ export default function DashboardLayout({
               <Key className="w-8 h-8 text-primary" />
             </div>
             <h1 className="text-2xl font-bold tracking-tight text-center text-white">
-              Shadow Optimizer
+              Shadow Games
             </h1>
             <p className="text-sm text-muted-foreground text-center max-w-sm">
               Faça login para acessar o painel de administração.
