@@ -4,6 +4,14 @@ import * as db from "./db";
 const router = express.Router();
 
 /**
+ * Health check endpoint
+ * GET /api/health
+ */
+router.get("/health", (_req: Request, res: Response) => {
+  return res.status(200).json({ ok: true, timestamp: new Date().toISOString() });
+});
+
+/**
  * Public REST endpoint for license validation
  * POST /api/validate-license
  * Body: { key: string, hwid: string }
@@ -33,6 +41,7 @@ router.post("/validate-license", async (req: Request, res: Response) => {
     // Get license by key
     const license = await db.getLicenseByKey(key);
     if (!license) {
+      // If DB is unavailable, getLicenseByKey returns undefined — treat as invalid key
       await db.logAccessAttempt(0, hwid, "invalid_key", requestSource as string);
       return res.status(200).json({
         authorized: false,

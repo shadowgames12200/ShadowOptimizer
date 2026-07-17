@@ -292,7 +292,15 @@ class SDKServer {
     if (!user) {
       // Try by username if openId looks like a username
       user = await db.getUserByUsername(sessionUserId);
-      
+
+      if (!user) {
+        // Try by numeric ID — manual-login users store id.toString() as openId in the JWT
+        const numericId = parseInt(sessionUserId, 10);
+        if (!isNaN(numericId) && numericId > 0) {
+          user = await db.getUserById(numericId);
+        }
+      }
+
       if (!user) {
         try {
           const userInfo = await this.getUserInfoWithJwt(sessionToken ?? "");

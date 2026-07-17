@@ -106,6 +106,18 @@ export async function getUserByUsername(username: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
+export async function getUserById(id: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get user: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+  return result.length > 0 ? result[0] : undefined;
+}
+
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
   if (!db) {
@@ -217,7 +229,10 @@ export async function bindHwidToLicense(
   hwid: string
 ) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    console.warn("[Database] Cannot bind HWID: database not available");
+    return;
+  }
 
   await db
     .update(licenses)
@@ -235,7 +250,10 @@ export async function logAccessAttempt(
   requestSource?: string
 ) {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
+  if (!db) {
+    console.warn("[Database] Cannot log access attempt: database not available");
+    return;
+  }
 
   await db.insert(accessLogs).values({
     licenseId,
