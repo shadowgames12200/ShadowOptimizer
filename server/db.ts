@@ -140,7 +140,7 @@ export async function getLicenseByKey(key: string) {
   const result = await db
     .select()
     .from(licenses)
-    .where(eq(licenses.key, key))
+    .where(eq(licenses.key, key.trim()))
     .limit(1);
 
   return result.length > 0 ? result[0] : undefined;
