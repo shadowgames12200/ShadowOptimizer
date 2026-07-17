@@ -8,8 +8,43 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import restApiRouter from "../rest-api";
+import mysql from "mysql2/promise";
+
+/**
+ * Ensure the database schema is up-to-date by applying any missing columns.
+ * This is a safe, idempotent operation that runs on every startup.
+ */
+async function ensureSchema() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+
+  try {
+    const connection = await mysql.createConnection(dbUrl);
+
+    // Ensure `product` column exists in `licenses` table (migration 0003)
+    try {
+      await connection.execute(
+        `ALTER TABLE \`licenses\` ADD COLUMN \`product\` ENUM('shadow_optimizer','shadow_1071') NOT NULL DEFAULT 'shadow_optimizer'`
+      );
+      console.log("[Schema] Added 'product' column to licenses table");
+    } catch (err: any) {
+      // Error 1060 = Duplicate column name — column already exists, which is fine
+      if (err?.errno !== 1060) {
+        console.error("[Schema] Unexpected error adding product column:", err?.message);
+      }
+    }
+
+    await connection.end();
+    console.log("[Schema] Schema check complete");
+  } catch (err) {
+    console.error("[Schema] Failed to run schema check:", err);
+  }
+}
 
 async function startServer() {
+  // Run schema migrations before starting the server
+  await ensureSchema();
+
   const app = express();
   const server = createServer(app);
   

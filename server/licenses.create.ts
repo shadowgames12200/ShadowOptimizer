@@ -34,6 +34,7 @@ export const createLicenseProcedure = protectedProcedure
         const key = generateLicenseKey(prefix);
 
         // Calculate expiration date if specified
+        // expiresInDays = 0 means lifetime (no expiration)
         let expiresAt: Date | null = null;
         if (expiresInDays !== undefined && expiresInDays > 0) {
           expiresAt = new Date();
@@ -54,14 +55,26 @@ export const createLicenseProcedure = protectedProcedure
         createdKeys.push(key);
       }
 
+      const expiryLabel = (expiresInDays === undefined || expiresInDays === 0)
+        ? "Vitalício"
+        : `${expiresInDays} dia(s)`;
+
       return {
         success: true,
-        message: `Created ${quantity} license key(s)`,
+        message: `${quantity} chave(s) criada(s) com sucesso! Validade: ${expiryLabel}`,
         keys: createdKeys,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("[License Creation Error]", error);
-      throw new Error("Failed to create licenses");
+      // Surface a more helpful error message
+      const detail = error?.message || "";
+      if (detail.includes("product") || detail.includes("column")) {
+        throw new Error(
+          "Erro de banco de dados: a coluna 'product' não existe na tabela licenses. " +
+          "Reinicie o servidor para aplicar a migração automaticamente."
+        );
+      }
+      throw new Error("Falha ao criar chaves de licença: " + detail);
     }
   });
 
