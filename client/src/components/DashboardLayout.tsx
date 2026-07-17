@@ -162,10 +162,7 @@ function AppSidebar() {
           {!isCollapsed && (
             <div className="flex flex-col">
               <span className="text-lg font-black tracking-tighter text-white uppercase italic">
-                Shadow
-              </span>
-              <span className="text-[10px] font-bold text-primary tracking-[0.2em] uppercase -mt-1">
-                Optimizer
+                Shadow Games
               </span>
             </div>
           )}
@@ -250,3 +247,4 @@ function AppSidebar() {
     </Sidebar>
   );
 }
+
