@@ -104,7 +104,18 @@ export const appRouter = router({
      * Admin: List all licenses for the current user
      */
     list: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getLicensesByUser(ctx.user.id);
+      const licenses = await db.getLicensesByUser(ctx.user.id);
+      const now = new Date();
+      
+      // Update expired status in background if needed
+      for (const license of licenses) {
+        if (license.status === "active" && license.expiresAt && now > new Date(license.expiresAt)) {
+          await db.updateLicenseStatus(license.id, "expired");
+          license.status = "expired"; // Update local object for immediate response
+        }
+      }
+      
+      return licenses;
     }),
 
     /**

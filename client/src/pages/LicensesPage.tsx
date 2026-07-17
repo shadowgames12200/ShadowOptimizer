@@ -113,13 +113,13 @@ export default function LicensesPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-500 text-white hover:bg-green-600";
       case "expired":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-orange-500 text-white hover:bg-orange-600";
       case "revoked":
-        return "bg-red-100 text-red-800";
+        return "bg-red-500 text-white hover:bg-red-600";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-500 text-white";
     }
   };
 
