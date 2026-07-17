@@ -1,4 +1,4 @@
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, inArray, and } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import { InsertUser, users, licenses, accessLogs, InsertLicense } from "../drizzle/schema";
@@ -158,8 +158,10 @@ export async function getLicensesByUserAndProduct(userId: number, product: "shad
     .select()
     .from(licenses)
     .where(
-      eq(licenses.createdByUserId, userId) &&
-      eq(licenses.product, product)
+      and(
+        eq(licenses.createdByUserId, userId),
+        eq(licenses.product, product)
+      )
     );
 }
 
