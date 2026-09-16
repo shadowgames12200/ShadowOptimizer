@@ -1,0 +1,20 @@
+name: Build Windows App
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build executable
+        shell: powershell
+        run: .\build-windows.ps1
+      - name: Zip app
+        shell: powershell
+        run: Compress-Archive -Path dist\ShadowOptimizer.exe -DestinationPath ShadowOptimizer-Windows.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ShadowOptimizer-Windows
+          path: ShadowOptimizer-Windows.zip
