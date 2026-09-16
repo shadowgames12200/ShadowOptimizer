@@ -1,0 +1,15 @@
+{
+  "brand": "Shadow Games",
+  "tagline": "Atendimento rápido e seguro",
+  "storeUrl": "https://discord.gg/ydBmrf4gyD",
+  "supportUrl": "https://discord.gg/ydBmrf4gyD",
+  "instagramUrl": "https://SEU-INSTAGRAM-AQUI",
+  "discordUrl": "https://discord.gg/ydBmrf4gyD",
+  "purchaseLabel": "Comprar pelo Discord",
+  "purchaseMessage": "Entre no Discord Shadow Games para comprar, tirar dúvidas e receber suporte.",
+  "products": [
+    {"name":"Contas e jogos","description":"Entre no Discord para consultar disponibilidade e comprar.","price":"Consulte","url":"https://discord.gg/ydBmrf4gyD"},
+    {"name":"Serviços Shadow Games","description":"Atendimento e serviços personalizados pelo Discord.","price":"Consulte","url":"https://discord.gg/ydBmrf4gyD"},
+    {"name":"Shadow Optimizer","description":"Conheça a versão disponível e receba suporte no Discord.","price":"Consulte","url":"https://discord.gg/ydBmrf4gyD"}
+  ]
+}

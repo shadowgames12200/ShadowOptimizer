@@ -19,8 +19,8 @@ from typing import Dict, Optional, Tuple
 from datetime import datetime
 
 # Configuration
-DEFAULT_API_URL = "https://shadow-boost-licensing.manus.space/api"
-DEFAULT_SCRIPT_NAME = "shadowWindowsBoost.bat"
+DEFAULT_API_URL = "https://shadow-optimizer.onrender.com/api"
+DEFAULT_SCRIPT_NAME = "shadow Windows Boost.bat"
 CONFIG_DIR = Path.home() / ".shadowoptimizer"
 CONFIG_FILE = CONFIG_DIR / "config.json"
 LOG_FILE = CONFIG_DIR / "executor.log"
