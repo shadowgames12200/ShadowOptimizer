@@ -13,7 +13,7 @@ datas = [
     ('shadow Windows Boost.bat', '.'),
     ('Shadow25Modules.ps1', '.'),
     ('icon.ico', '.'),
-    ('legacy', 'legacy'),
+    ('legacy.zip', '.'),
 ]
 
 a = Analysis(['ShadowOptimizerAppFull.py'], pathex=['.'], binaries=[], datas=datas, hiddenimports=hiddenimports, hookspath=[], hooksconfig={}, runtime_hooks=[], excludes=[], noarchive=False)

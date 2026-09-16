@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Shadow Games Optimizer: painel licenciado com 25 telas funcionais."""
-import hashlib, json, os, platform, subprocess, sys, threading, tkinter as tk, webbrowser
+import hashlib, json, os, platform, subprocess, sys, threading, tkinter as tk, webbrowser, zipfile
 from pathlib import Path
 from tkinter import messagebox, ttk
 try:
@@ -17,6 +17,20 @@ API_URL = "https://shadow-optimizer.onrender.com/api/validate-license"
 CONFIG_DIR = Path.home() / ".shadowoptimizer"
 LOG_FILE = CONFIG_DIR / "client.log"
 BAT_FILE = ROOT / "shadow Windows Boost.bat"
+LEGACY_ROOT = CONFIG_DIR / "legacy"
+
+def ensure_legacy():
+    archive = ROOT / "legacy.zip"
+    marker = LEGACY_ROOT / "shadow Windows Boost.bat"
+    if marker.exists(): return
+    if archive.exists():
+        try:
+            LEGACY_ROOT.mkdir(parents=True, exist_ok=True)
+            with zipfile.ZipFile(archive) as z: z.extractall(LEGACY_ROOT)
+            log("Componentes originais extraídos para o modo clássico")
+        except Exception as exc: log(f"Falha ao extrair legacy.zip: {exc}")
+
+ensure_legacy()
 
 MODULES = [
 (1,"Central de saúde","Diagnóstico","CPU, RAM, discos, sistema e espaço livre."),(2,"Detector de gargalo","Diagnóstico","Amostra CPU, RAM, disco e processos para apontar o recurso mais pressionado."),(3,"Saúde do SSD/HD","Armazenamento","Consulta discos físicos, modelo, interface e status informado pelo Windows."),(4,"Arquivos grandes","Armazenamento","Lista arquivos grandes sem apagar nada."),(5,"Arquivos duplicados","Armazenamento","Compara hashes de arquivos selecionados sem remover cópias."),(6,"Gerenciador de drivers","Sistema","Lista drivers e dispositivos com código de problema."),(7,"Auditoria de segurança","Segurança","Consulta Defender, Firewall, Secure Boot e TPM."),(8,"Auditoria de privacidade","Privacidade","Lista processos e pontos de inicialização para revisão manual."),(9,"Tarefas agendadas","Sistema","Lista tarefas agendadas e seus estados."),(10,"Limpador de navegadores","Limpeza","Mostra processos e tamanho de caches; a remoção é manual e confirmada."),(11,"Manutenção automática","Automação","Mostra tarefas de manutenção e orienta configuração segura."),(12,"Atualizador do programa","Sistema","Exibe versão local e origem configurada para atualização."),(13,"Sistema de plugins","Avançado","Lista plugins locais disponíveis."),(14,"Bibliotecas de jogos","Jogos","Localiza pastas comuns de Steam, Epic e Xbox."),(15,"Cache de shaders","Jogos","Mede caches comuns; não apaga automaticamente."),(16,"Perfil de notebook","Energia","Consulta bateria e autonomia quando disponível."),(17,"Monitor de temperatura","Monitoramento","Consulta sensores térmicos expostos pelo Windows."),(18,"Teste de estabilidade","Diagnóstico","Amostra CPU e memória por 20 segundos sem estresse artificial."),(19,"Diagnóstico de travamentos","Diagnóstico","Consulta eventos críticos e erros recentes do Windows."),(20,"Modo recuperação","Reparo","Executa somente diagnóstico do alvo escolhido."),(21,"Regras por processo","Automação","Mostra processos e prioridades atuais."),(22,"Recomendações locais","Inteligência","Gera sugestões a partir do diagnóstico local."),(23,"Comparação de perfis","Benchmark","Compara arquivos CSV de benchmarks já realizados."),(24,"Restauração completa","Segurança","Lista snapshots disponíveis antes de qualquer restauração."),(25,"Interface Shadow Games","Personalização","Mostra branding, Discord, produtos e configuração comercial."),
@@ -172,7 +186,7 @@ class App(tk.Tk):
         button=ttk.Button(parent,text=label,state="disabled",command=lambda:self.launch_legacy(filename,dangerous)); button.pack(side="left",padx=3,pady=6); self.legacy_buttons.append(button)
 
     def launch_legacy(self, filename, dangerous=False):
-        target=ROOT/"legacy"/filename
+        target=LEGACY_ROOT/filename
         if not target.exists():
             messagebox.showerror("Ferramenta ausente",f"Não encontrado no pacote: {target.name}"); return
         if dangerous and not messagebox.askyesno("Debloater clássico", "Esta ferramenta pode remover aplicativos e alterar o Windows. Você deseja abrir o modo clássico por sua conta e risco?"):
